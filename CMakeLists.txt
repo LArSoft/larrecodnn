@@ -8,7 +8,7 @@
 
 cmake_minimum_required (VERSION 3.19 FATAL_ERROR)
 
-project(larrecodnn LANGUAGES CXX)
+project(larrecodnn VERSION 09.06.08 LANGUAGES CXX)
 
 find_package(cetmodules REQUIRED)
 find_package(Threads)
