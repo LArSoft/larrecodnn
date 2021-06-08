@@ -19,7 +19,7 @@ art_make( MODULE_LIBRARIES
                        art_Persistency_Provenance
                        art_Utilities
                        canvas
-                       ${MF_MESSAGELOGGER}
+                       messagefacility::MFMessageLogger
                        ${ROOT_BASIC_LIB_LIST}
                        ROOT::Core
 )

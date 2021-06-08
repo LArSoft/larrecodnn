@@ -5,7 +5,7 @@ cet_add_compiler_flags(CXX -Wno-unused-result)
 
 art_make(
           LIB_LIBRARIES
-			${FHICLCPP}
+			fhiclcpp::fhiclcpp fhiclcpp::types
 			cetlib cetlib_except
 			${TENSORFLOW}
 			${PROTOBUF}
