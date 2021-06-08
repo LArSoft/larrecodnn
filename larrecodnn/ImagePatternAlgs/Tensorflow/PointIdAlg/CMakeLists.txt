@@ -19,7 +19,7 @@ art_make(LIB_LIBRARIES larreco_RecoAlg_ImagePatternAlgs_DataProvider
                        art_Persistency_Provenance
                        art_Utilities
                        canvas
-                       messagefacility::MFMessageLogger
+                       messagefacility::MF_MessageLogger
                        fhiclcpp::fhiclcpp fhiclcpp::types
                        cetlib cetlib_except
                        ${CLHEP}
