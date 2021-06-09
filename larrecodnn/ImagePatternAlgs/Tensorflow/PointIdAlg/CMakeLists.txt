@@ -9,7 +9,7 @@ art_make(LIB_LIBRARIES larreco_RecoAlg_ImagePatternAlgs_DataProvider
                        lardataobj_RecoBase
                        larreco_Calorimetry
                        nusimdata_SimulationBase
-                       art::Framwork_Core
+                       art::Framework_Core
                        art::Framework_Principal
                        art::Framework_Services_Registry
                        art_root_io::tfile_support
