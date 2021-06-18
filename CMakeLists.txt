@@ -73,7 +73,9 @@ endif ()
 add_subdirectory(larrecodnn)
 
 # ups - table and config files
+if(WANT_UPS)
 add_subdirectory(ups)
+endif()
 
 # packaging utility
 include(UseCPack)
