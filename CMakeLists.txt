@@ -42,10 +42,10 @@ find_ups_product( nug4 )
 find_ups_product( nurandom )
 find_ups_product( art )
 find_ups_product(art_root_io)
-find_package( postgresql )
-find_ups_product( range )
 find_ups_product( eigen )
-find_ups_product( root )
+find_package( postgresql )
+find_package( ROOT )
+find_package( range3 )
 
 # macros for dictionary and simple_plugin
 include(ArtDictionary)
