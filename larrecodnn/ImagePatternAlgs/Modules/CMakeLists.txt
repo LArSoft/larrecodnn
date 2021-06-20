@@ -20,7 +20,8 @@ art_make( MODULE_LIBRARIES
                        art_Utilities
                        canvas
                        messagefacility::MF_MessageLogger
-                       ${ROOT_BASIC_LIB_LIST}
+                       ROOT::MathCore
+                       ROOT::Tree
                        ROOT::Core
 )
 
