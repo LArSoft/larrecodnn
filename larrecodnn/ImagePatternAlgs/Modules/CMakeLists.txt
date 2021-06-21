@@ -20,6 +20,7 @@ art_make( MODULE_LIBRARIES
                        art_Utilities
                        canvas
                        messagefacility::MF_MessageLogger
+                       Root::Physics
                        ROOT::Hist
                        ROOT::MathCore
                        ROOT::Tree
