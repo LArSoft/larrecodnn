@@ -1,4 +1,4 @@
-art_make(LIB_LIBRARIES ${TBB})
+art_make(LIB_LIBRARIES TBB::tbb)
 
 add_subdirectory(Tools)
 

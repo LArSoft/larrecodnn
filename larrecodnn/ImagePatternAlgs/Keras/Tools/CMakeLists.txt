@@ -6,6 +6,7 @@ art_make(
           ROOT::Core
           canvas
           messagefacility::MF_MessageLogger
+          TBB::tbb
         )
 
 install_source()

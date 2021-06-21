@@ -46,6 +46,7 @@ find_ups_product( eigen )
 find_package( postgresql )
 find_package( ROOT )
 find_package( range3 )
+find_package( TBB ) 
 
 # macros for dictionary and simple_plugin
 include(ArtDictionary)
