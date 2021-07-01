@@ -6,15 +6,15 @@
 #  buildtool [-I /install/path] -bt[i] -jN
 # ======================================================================
 
-cmake_minimum_required (VERSION 3.12...3.18 FATAL_ERROR)
+cmake_minimum_required (VERSION 3.19 FATAL_ERROR)
 
-project(larrecodnn LANGUAGES CXX)
+project(larrecodnn VERSION 09.06.08 LANGUAGES CXX)
 
-# cetbuildtools contains our cmake modules
-find_package(cetbuildtools REQUIRED)
+find_package(cetmodules REQUIRED)
 find_package(Threads)
 
-list(APPEND CMAKE_MODULE_PATH $ENV{CANVAS_ROOT_IO_DIR}/Modules $ENV{ART_DIR}/Modules)
+find_package(canvas_root_io)
+find_package(art)
 
 include(CetCMakeEnv)
 cet_cmake_env()
@@ -42,10 +42,11 @@ find_ups_product( nug4 )
 find_ups_product( nurandom )
 find_ups_product( art )
 find_ups_product(art_root_io)
-find_ups_product( postgresql )
-find_ups_product( range )
 find_ups_product( eigen )
-find_ups_product( root )
+find_package( postgresql )
+find_package( ROOT )
+find_package( range3 )
+find_package( TBB ) 
 
 # macros for dictionary and simple_plugin
 include(ArtDictionary)
@@ -54,14 +55,14 @@ include(BuildPlugins)
 
 if(( DEFINED ENV{TENSORFLOW_DIR} ) OR ( DEFINED ENV{TRITON_DIR} ))
   find_ups_product( protobuf )
-  cet_find_library(PROTOBUF NAMES protobuf PATHS ENV PROTOBUF_LIB NO_DEFAULT_PATH )
+  cet_find_library(PROTOBUF NAMES protobuf PATHS ENV PROTOBUF_LIB  )
 endif ()
 # tensorflow is optional
 if( DEFINED ENV{TENSORFLOW_DIR} )
   # find tensorflow library
   find_ups_product( tensorflow )
-  cet_find_library(TENSORFLOW NAMES tensorflow PATHS ENV TENSORFLOW_LIB NO_DEFAULT_PATH )
-  cet_find_library(FOR_TENSORFLOW NAMES tensorflow_framework PATHS ENV TENSORFLOW_LIB NO_DEFAULT_PATH )
+  cet_find_library(TENSORFLOW NAMES tensorflow PATHS ENV TENSORFLOW_LIB  )
+  cet_find_library(FOR_TENSORFLOW NAMES tensorflow_framework PATHS ENV TENSORFLOW_LIB  )
 endif ()
 # trtis_clients is optional
 if( DEFINED ENV{TRITON_DIR} )
@@ -73,7 +74,9 @@ endif ()
 add_subdirectory(larrecodnn)
 
 # ups - table and config files
+if(WANT_UPS)
 add_subdirectory(ups)
+endif()
 
 # packaging utility
 include(UseCPack)

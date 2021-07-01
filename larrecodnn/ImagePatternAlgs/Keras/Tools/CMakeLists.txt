@@ -5,7 +5,8 @@ art_make(
           larcorealg_Geometry
           ROOT::Core
           canvas
-          ${MF_MESSAGELOGGER}
+          messagefacility::MF_MessageLogger
+          TBB::tbb
         )
 
 install_source()
