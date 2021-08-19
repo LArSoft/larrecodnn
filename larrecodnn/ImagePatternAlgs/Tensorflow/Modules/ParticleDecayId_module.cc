@@ -78,7 +78,8 @@ namespace nnet {
                      const std::vector<recob::Wire>& wires,
                      const std::vector<art::Ptr<recob::Hit>>& hits,
                      std::map<size_t, TVector3>& spoints,
-                     std::vector<std::pair<TVector3, double>>& result);
+                     std::vector<std::pair<TVector3, double>>& result,
+                     art::Timestamp t);
 
     PointIdAlg fPointIdAlg;
 
@@ -126,6 +127,7 @@ namespace nnet {
       art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(evt, clockData);
 
     std::vector<std::pair<TVector3, double>> decays;
+    auto t = evt.time();
     for (size_t i = 0; i < hitsFromTracks.size(); ++i) {
       auto hits = hitsFromTracks.at(i);
       auto spoints = spFromTracks.at(i);
@@ -139,7 +141,7 @@ namespace nnet {
         }
       }
 
-      DetectDecay(clockData, detProp, *wireHandle, hits, trkSpacePoints, decays);
+      DetectDecay(clockData, detProp, *wireHandle, hits, trkSpacePoints, decays, t);
     }
 
     double xyz[3];
@@ -172,7 +174,8 @@ namespace nnet {
                                const std::vector<recob::Wire>& wires,
                                const std::vector<art::Ptr<recob::Hit>>& hits,
                                std::map<size_t, TVector3>& spoints,
-                               std::vector<std::pair<TVector3, double>>& result)
+                               std::vector<std::pair<TVector3, double>>& result, 
+                               art::Timestamp t)
   {
     const size_t nviews = 3;
 
@@ -191,7 +194,7 @@ namespace nnet {
         int tpc = wire_drift[v][i]->WireID().TPC;
         int cryo = wire_drift[v][i]->WireID().Cryostat;
 
-        fPointIdAlg.setWireDriftData(clockData, detProp, wires, v, tpc, cryo);
+        fPointIdAlg.setWireDriftData(clockData, detProp, wires, v, tpc, cryo, t);
 
         outputs[v][i] = fPointIdAlg.predictIdVector(wire_drift[v][i]->WireID().Wire,
                                                     wire_drift[v][i]->PeakTime())[0]; // p(decay)

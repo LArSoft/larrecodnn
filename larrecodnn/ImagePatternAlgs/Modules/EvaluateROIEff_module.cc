@@ -107,14 +107,14 @@ nnet::EvaluateROIEff::analyze(art::Event const& e)
   }
 
   auto simChannelHandle = e.getValidHandle<std::vector<sim::SimChannel>>(fSimulationProducerLabel);
-
+  auto ts = e.time().value();
   // efficiency: according to each simulated energy deposit
   // ... Loop over simChannels
   for (auto const& channel : (*simChannelHandle)) {
 
     // .. get simChannel channel number
     const raw::ChannelID_t ch1 = channel.Channel();
-    if (chStatus.IsBad(ch1)) continue;
+    if (chStatus.IsBad(ts, ch1)) continue;
 
     if (ch1 % 1000 == 0) mf::LogInfo("EvaluateROIEFF") << ch1;
     int view = geo->View(ch1);
@@ -286,7 +286,7 @@ nnet::EvaluateROIEff::analyze(art::Event const& e)
 
   for (auto& wire : wires) {
     const raw::ChannelID_t wirechannel = wire->Channel();
-    if (chStatus.IsBad(wirechannel)) continue;
+    if (chStatus.IsBad(ts, wirechannel)) continue;
 
     int view = wire->View();
 

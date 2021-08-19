@@ -173,6 +173,7 @@ namespace nnet {
     }
 
     // ********************* classify hits **********************
+    auto t = evt.time();
     auto hitID = fMVAWriter.initOutputs<recob::Hit>(
       fHitModuleLabel, hitPtrList.size(), fPointIdAlg.outputLabels());
 
@@ -191,7 +192,7 @@ namespace nnet {
           view = pview.first;
           if (!isViewSelected(view)) continue; // should not happen, hits were selected
 
-          fPointIdAlg.setWireDriftData(clockData, detProp, *wireHandle, view, tpc, cryo);
+          fPointIdAlg.setWireDriftData(clockData, detProp, *wireHandle, view, tpc, cryo, t);
 
           // (1) do all hits in this plane ------------------------------------------------
           for (size_t idx = 0; idx < pview.second.size(); idx += fBatchSize) {

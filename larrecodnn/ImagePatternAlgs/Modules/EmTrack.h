@@ -346,13 +346,14 @@ namespace nnet {
     std::vector<char> hitInFA(hitPtrList.size(),
                               0); // tag hits in fid. area as 1, use 0 for hits
                                   // close to the projectrion edges
+    auto t = evt.time();
     for (auto const& [key, hits] : hitMap) {
       auto const& [cryo, tpc, view] = key;
       if (!isViewSelected(view))
         continue; // should not happen, hits were selected
 
       fPointIdAlgTool->setWireDriftData(
-        clockData, detProp, *wireHandle, view, tpc, cryo);
+        clockData, detProp, *wireHandle, view, tpc, cryo, t);
 
       // (1) do all hits in this plane
       // ------------------------------------------------

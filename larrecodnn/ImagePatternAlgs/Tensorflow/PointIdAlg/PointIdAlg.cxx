@@ -721,7 +721,7 @@ nnet::TrainingDataAlg::setDataEventData(const art::Event& event,
 
   if (event.getByLabel(fWireProducerLabel, wireHandle)) art::fill_ptr_vector(Wirelist, wireHandle);
 
-  if (!setWireDriftData(clockData, detProp, *wireHandle, plane, tpc, cryo)) {
+  if (!setWireDriftData(clockData, detProp, *wireHandle, plane, tpc, cryo, event.time())) {
     mf::LogError("TrainingDataAlg") << "Wire data not set.";
     return false;
   }
@@ -866,7 +866,7 @@ nnet::TrainingDataAlg::setEventData(const art::Event& event,
   art::ValidHandle<std::vector<recob::Wire>> wireHandle =
     event.getValidHandle<std::vector<recob::Wire>>(fWireProducerLabel);
 
-  if (!setWireDriftData(clockData, detProp, *wireHandle, plane, tpc, cryo)) {
+  if (!setWireDriftData(clockData, detProp, *wireHandle, plane, tpc, cryo, event.time())) {
     mf::LogError("TrainingDataAlg") << "Wire data not set.";
     return false;
   }
