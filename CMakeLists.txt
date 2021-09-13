@@ -6,12 +6,13 @@
 #  buildtool [-I /install/path] -bt[i] -jN
 # ======================================================================
 
-cmake_minimum_required (VERSION 3.12...3.18 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.19 FATAL_ERROR)
 
-project(larrecodnn LANGUAGES CXX)
+project(larrecodnn VERSION 09.08.02.01 LANGUAGES CXX)
 
 # cetbuildtools contains our cmake modules
 find_package(cetbuildtools REQUIRED)
+find_package(Threads)
 
 list(APPEND CMAKE_MODULE_PATH $ENV{CANVAS_ROOT_IO_DIR}/Modules $ENV{ART_DIR}/Modules)
 
@@ -21,7 +22,7 @@ cet_cmake_env()
 cet_set_compiler_flags(DIAGS CAUTIOUS
   WERROR
   NO_UNDEFINED
-  EXTRA_FLAGS -pedantic -Wno-unused-local-typedefs
+  EXTRA_FLAGS -Wno-unused-local-typedefs
 )
 
 cet_report_compiler_flags()
@@ -44,14 +45,15 @@ find_ups_product(art_root_io)
 find_ups_product( postgresql )
 find_ups_product( range )
 find_ups_product( eigen )
-find_ups_product( root )
+find_ups_product( tbb )
+find_ups_root()
 
 # macros for dictionary and simple_plugin
 include(ArtDictionary)
 include(ArtMake)
 include(BuildPlugins)
 
-if(( DEFINED ENV{TENSORFLOW_DIR} ) OR ( DEFINED ENV{TRTIS_CLIENTS_DIR} ))
+if(( DEFINED ENV{TENSORFLOW_DIR} ) OR ( DEFINED ENV{TRITON_DIR} ))
   find_ups_product( protobuf )
   cet_find_library(PROTOBUF NAMES protobuf PATHS ENV PROTOBUF_LIB NO_DEFAULT_PATH )
 endif ()
@@ -59,12 +61,16 @@ endif ()
 if( DEFINED ENV{TENSORFLOW_DIR} )
   # find tensorflow library
   find_ups_product( tensorflow )
-  cet_find_library(TENSORFLOW NAMES tensorflow-core PATHS ENV TENSORFLOW_LIB NO_DEFAULT_PATH )
+  cet_find_library(TENSORFLOW NAMES tensorflow PATHS ENV TENSORFLOW_LIB NO_DEFAULT_PATH )
+  cet_find_library(FOR_TENSORFLOW NAMES tensorflow_framework PATHS ENV TENSORFLOW_LIB NO_DEFAULT_PATH )
 endif ()
 # trtis_clients is optional
-if( DEFINED ENV{TRTIS_CLIENTS_DIR} )
-  find_ups_product(trtis_clients)
+if( DEFINED ENV{TRITON_DIR} )
+  find_ups_product(triton)
+  find_ups_product(grpc)
 endif ()
+
+include_directories( $ENV{EIGEN_INC} )
 
 # source
 add_subdirectory(larrecodnn)
