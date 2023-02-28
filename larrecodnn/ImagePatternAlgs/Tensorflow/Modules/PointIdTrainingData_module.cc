@@ -36,14 +36,14 @@
 
 namespace {
   template <typename Hist>
-  void writeAndDelete(Hist*& hist) {
+  void writeAndDelete(Hist*& hist)
+  {
     if (!hist) return;
     hist->Write();
     delete hist;
     hist = nullptr;
   } // writeAndDelete()
 } // local namespace
-
 
 namespace nnet {
 
@@ -95,7 +95,6 @@ namespace nnet {
     bool fCrop; /// crop data to event (set to false when dumping noise!)
 
     geo::GeometryCore const* fGeometry;
-
   };
 
   //-----------------------------------------------------------------------
@@ -123,8 +122,7 @@ namespace nnet {
   }
 
   //-----------------------------------------------------------------------
-  void
-  PointIdTrainingData::analyze(const art::Event& event)
+  void PointIdTrainingData::analyze(const art::Event& event)
   {
     fEvent = event.id().event();
     fRun = event.run();
@@ -204,7 +202,6 @@ namespace nnet {
           writeAndDelete(rawHist);
           writeAndDelete(depHist);
           writeAndDelete(pdgHist);
-
         }
         else {
           std::ostringstream ss1;

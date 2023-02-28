@@ -67,8 +67,7 @@ namespace PointIdAlgTools {
       int samples = -1) const = 0;
 
     // calculate single-value prediction (2-class probability) for [wire, drift] point
-    float
-    predictIdValue(unsigned int wire, float drift, size_t outIdx = 0)
+    float predictIdValue(unsigned int wire, float drift, size_t outIdx = 0)
     {
       float result = 0.;
 
@@ -87,8 +86,7 @@ namespace PointIdAlgTools {
     }
 
     // Calculate multi-class probabilities for [wire, drift] point
-    std::vector<float>
-    predictIdVector(unsigned int wire, float drift)
+    std::vector<float> predictIdVector(unsigned int wire, float drift)
     {
       std::vector<float> result;
 
@@ -104,8 +102,8 @@ namespace PointIdAlgTools {
     }
 
     // Calculate multi-class probabilities for a vector of [wire, drift] points
-    std::vector<std::vector<float>>
-    predictIdVectors(const std::vector<std::pair<unsigned int, float>>& points)
+    std::vector<std::vector<float>> predictIdVectors(
+      const std::vector<std::pair<unsigned int, float>>& points)
     {
       if (points.empty()) { return std::vector<std::vector<float>>(); }
 
@@ -123,13 +121,8 @@ namespace PointIdAlgTools {
       return Run(inps);
     }
 
-    std::vector<std::string> const&
-    outputLabels(void) const
-    {
-      return fNNetOutputs;
-    }
-    bool
-    isInsideFiducialRegion(unsigned int wire, float drift) const
+    std::vector<std::string> const& outputLabels(void) const { return fNNetOutputs; }
+    bool isInsideFiducialRegion(unsigned int wire, float drift) const
     {
       size_t marginW = fPatchSizeW / 8; // fPatchSizeX/2 will make patch always completely filled
       size_t marginD = fPatchSizeD / 8;
@@ -150,8 +143,7 @@ namespace PointIdAlgTools {
     std::vector<std::vector<float>> fWireDriftPatch; // patch data around the identified point
     size_t fCurrentWireIdx, fCurrentScaledDrift;
 
-    bool
-    bufferPatch(size_t wire, float drift, std::vector<std::vector<float>>& patch)
+    bool bufferPatch(size_t wire, float drift, std::vector<std::vector<float>>& patch)
     {
       if (fDownscaleFullView) {
         size_t sd = (size_t)(drift / fDriftWindow);
@@ -174,14 +166,9 @@ namespace PointIdAlgTools {
       }
     }
 
-    bool
-    bufferPatch(size_t wire, float drift)
-    {
-      return bufferPatch(wire, drift, fWireDriftPatch);
-    }
+    bool bufferPatch(size_t wire, float drift) { return bufferPatch(wire, drift, fWireDriftPatch); }
 
-    void
-    resizePatch(void)
+    void resizePatch(void)
     {
       fWireDriftPatch.resize(fPatchSizeW);
       for (auto& r : fWireDriftPatch)

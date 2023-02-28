@@ -5,8 +5,8 @@
 
 #include <string>
 #include <string_view>
-#include <vector>
 #include <unordered_set>
+#include <vector>
 
 #include "grpc_client.h"
 
@@ -23,6 +23,6 @@ namespace triton_utils {
   //helper to turn triton error into warning
   bool warnIfError(const Error& err, std::string_view msg);
 
-}  // namespace triton_utils
+} // namespace triton_utils
 
 #endif

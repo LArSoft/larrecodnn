@@ -19,8 +19,7 @@ namespace wavrec_tool {
     // The value of each element of the vector represents whether the
     // corresponding time bin of the waveform is in an ROI or not.
     // ---------------------------------------------------------------------
-    std::vector<bool>
-    findROI(const std::vector<float>& adcin) const
+    std::vector<bool> findROI(const std::vector<float>& adcin) const
     {
       std::vector<bool> bvec(fWaveformSize, false);
       if (adcin.size() != fWaveformSize) { return bvec; }
@@ -46,8 +45,7 @@ namespace wavrec_tool {
     // waveform. The value in each bin represents the probability
     // whether that bin is in an ROI or not
     // -------------------------------------------------------------
-    std::vector<float>
-    predROI(const std::vector<float>& adcin) const
+    std::vector<float> predROI(const std::vector<float>& adcin) const
     {
       std::vector<float> fvec(fWaveformSize, 0.);
       if (adcin.size() != fWaveformSize) { return fvec; }
@@ -67,8 +65,7 @@ namespace wavrec_tool {
     }
 
   protected:
-    std::string
-    findFile(const char* fileName) const
+    std::string findFile(const char* fileName) const
     {
       std::string fname_out;
       cet::search_path sp("FW_SEARCH_PATH");
@@ -83,8 +80,7 @@ namespace wavrec_tool {
       return fname_out;
     }
 
-    void
-    setupWaveRecRoiParams(const fhicl::ParameterSet& pset)
+    void setupWaveRecRoiParams(const fhicl::ParameterSet& pset)
     {
       fCnnPredCut = pset.get<float>("CnnPredCut", 0.5);
       fWaveformSize = pset.get<unsigned int>("WaveformSize", 0); // 6000
@@ -163,8 +159,7 @@ namespace wavrec_tool {
     unsigned int fNumStrides;
     unsigned int fLastWindowSize;
 
-    std::vector<std::vector<float>>
-    scanWaveform(const std::vector<float>& adcin) const
+    std::vector<std::vector<float>> scanWaveform(const std::vector<float>& adcin) const
     {
       // .. rescale input waveform for CNN
       std::vector<float> adc(fWaveformSize);

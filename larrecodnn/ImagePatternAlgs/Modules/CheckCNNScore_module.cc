@@ -71,8 +71,7 @@ pdsp::CheckCNNScore::CheckCNNScore(fhicl::ParameterSet const& p)
   , fHitsModuleLabel(p.get<art::InputTag>("HitsModuleLabel"))
 {}
 
-void
-pdsp::CheckCNNScore::analyze(art::Event const& e)
+void pdsp::CheckCNNScore::analyze(art::Event const& e)
 {
 
   run = e.run();
@@ -122,8 +121,7 @@ pdsp::CheckCNNScore::analyze(art::Event const& e)
   if (!channel.empty()) ftree->Fill();
 }
 
-void
-pdsp::CheckCNNScore::beginJob()
+void pdsp::CheckCNNScore::beginJob()
 {
   art::ServiceHandle<art::TFileService> fileServiceHandle;
   ftree = fileServiceHandle->make<TTree>("ftree", "hit info");

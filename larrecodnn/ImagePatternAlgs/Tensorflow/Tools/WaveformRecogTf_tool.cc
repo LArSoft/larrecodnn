@@ -41,8 +41,8 @@ namespace wavrec_tool {
   }
 
   // ------------------------------------------------------
-  std::vector<std::vector<float>>
-  WaveformRecogTf::predictWaveformType(const std::vector<std::vector<float>>& waveforms) const
+  std::vector<std::vector<float>> WaveformRecogTf::predictWaveformType(
+    const std::vector<std::vector<float>>& waveforms) const
   {
     if (waveforms.empty() || waveforms.front().empty()) {
       return std::vector<std::vector<float>>();

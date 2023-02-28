@@ -108,11 +108,7 @@ public:
   ~PointIdAlg() override;
 
   /// network output labels
-  std::vector<std::string> const&
-  outputLabels() const
-  {
-    return fNNetOutputs;
-  }
+  std::vector<std::string> const& outputLabels() const { return fNNetOutputs; }
 
   /// calculate single-value prediction (2-class probability) for [wire, drift] point
   float predictIdValue(unsigned int wire, float drift, size_t outIdx = 0) const;
@@ -125,13 +121,8 @@ public:
 
   static std::vector<float> flattenData2D(std::vector<std::vector<float>> const& patch);
 
-  std::vector<std::vector<float>> const&
-  patchData2D() const
-  {
-    return fWireDriftPatch;
-  }
-  std::vector<float>
-  patchData1D() const
+  std::vector<std::vector<float>> const& patchData2D() const { return fWireDriftPatch; }
+  std::vector<float> patchData1D() const
   {
     return flattenData2D(fWireDriftPatch);
   } // flat vector made of the patch data, wire after wire
@@ -154,8 +145,7 @@ private:
   size_t fPatchSizeW, fPatchSizeD;
 
   mutable size_t fCurrentWireIdx, fCurrentScaledDrift;
-  bool
-  bufferPatch(size_t wire, float drift, std::vector<std::vector<float>>& patch) const
+  bool bufferPatch(size_t wire, float drift, std::vector<std::vector<float>>& patch) const
   {
     if (fDownscaleFullView) {
       size_t sd = (size_t)(drift / fDriftWindow);
@@ -177,15 +167,13 @@ private:
       return patchFromOriginalView(wire, drift, fPatchSizeW, fPatchSizeD, patch);
     }
   }
-  bool
-  bufferPatch(size_t wire, float drift) const
+  bool bufferPatch(size_t wire, float drift) const
   {
     return bufferPatch(wire, drift, fWireDriftPatch);
   }
   void resizePatch();
 
-  void
-  deleteNNet()
+  void deleteNNet()
   {
     if (fNNet) delete fNNet;
     fNNet = 0;
@@ -261,11 +249,7 @@ public:
 
   void reconfigure(const Config& config);
 
-  bool
-  saveSimInfo() const
-  {
-    return fSaveSimInfo;
-  }
+  bool saveSimInfo() const { return fSaveSimInfo; }
 
   bool setEventData(
     const art::Event& event, // collect & downscale ADC's, charge deposits, pdg labels
@@ -289,21 +273,9 @@ public:
                 unsigned int& d0,
                 unsigned int& d1) const;
 
-  double
-  getEdepTot() const
-  {
-    return fEdepTot;
-  } // [GeV]
-  std::vector<float> const&
-  wireEdep(size_t widx) const
-  {
-    return fWireDriftEdep[widx];
-  }
-  std::vector<int> const&
-  wirePdg(size_t widx) const
-  {
-    return fWireDriftPdg[widx];
-  }
+  double getEdepTot() const { return fEdepTot; } // [GeV]
+  std::vector<float> const& wireEdep(size_t widx) const { return fWireDriftEdep[widx]; }
+  std::vector<int> const& wirePdg(size_t widx) const { return fWireDriftPdg[widx]; }
 
 protected:
   img::DataProviderAlgView resizeView(detinfo::DetectorClocksData const& clock_data,
@@ -336,8 +308,7 @@ private:
     const std::unordered_map<int, const simb::MCParticle*>& particleMap,
     unsigned int plane) const;
 
-  static float
-  particleRange2(const simb::MCParticle& particle)
+  static float particleRange2(const simb::MCParticle& particle)
   {
     float dx = particle.EndX() - particle.Vx();
     float dy = particle.EndY() - particle.Vy();

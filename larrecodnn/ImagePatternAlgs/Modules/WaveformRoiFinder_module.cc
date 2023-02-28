@@ -91,8 +91,7 @@ nnet::WaveformRoiFinder::WaveformRoiFinder(fhicl::ParameterSet const& p)
   produces<std::vector<recob::Wire>>();
 }
 
-void
-nnet::WaveformRoiFinder::produce(art::Event& e)
+void nnet::WaveformRoiFinder::produce(art::Event& e)
 {
   art::Handle<std::vector<raw::RawDigit>> rawListHandle;
   std::vector<art::Ptr<raw::RawDigit>> rawlist;

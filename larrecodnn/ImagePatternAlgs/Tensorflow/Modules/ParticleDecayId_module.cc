@@ -106,8 +106,7 @@ namespace nnet {
   }
   // ------------------------------------------------------
 
-  void
-  ParticleDecayId::produce(art::Event& evt)
+  void ParticleDecayId::produce(art::Event& evt)
   {
     std::cout << std::endl << "event " << evt.id().event() << std::endl;
 
@@ -168,14 +167,13 @@ namespace nnet {
   }
   // ------------------------------------------------------
 
-  bool
-  ParticleDecayId::DetectDecay(detinfo::DetectorClocksData const& clockData,
-                               detinfo::DetectorPropertiesData const& detProp,
-                               const std::vector<recob::Wire>& wires,
-                               const std::vector<art::Ptr<recob::Hit>>& hits,
-                               std::map<size_t, TVector3>& spoints,
-                               std::vector<std::pair<TVector3, double>>& result, 
-                               art::Timestamp t)
+  bool ParticleDecayId::DetectDecay(detinfo::DetectorClocksData const& clockData,
+                                    detinfo::DetectorPropertiesData const& detProp,
+                                    const std::vector<recob::Wire>& wires,
+                                    const std::vector<art::Ptr<recob::Hit>>& hits,
+                                    std::map<size_t, TVector3>& spoints,
+                                    std::vector<std::pair<TVector3, double>>& result,
+                                    art::Timestamp t)
   {
     const size_t nviews = 3;
 

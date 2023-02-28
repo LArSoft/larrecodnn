@@ -147,8 +147,7 @@ namespace nnet {
   }
   // ------------------------------------------------------
 
-  void
-  EmTrackMichelId::produce(art::Event& evt)
+  void EmTrackMichelId::produce(art::Event& evt)
   {
     mf::LogVerbatim("EmTrackMichelId") << "next event: " << evt.run() << " / " << evt.id().event();
 
@@ -408,8 +407,7 @@ namespace nnet {
   }
   // ------------------------------------------------------
 
-  bool
-  EmTrackMichelId::isViewSelected(int view) const
+  bool EmTrackMichelId::isViewSelected(int view) const
   {
     if (fViews.empty())
       return true;

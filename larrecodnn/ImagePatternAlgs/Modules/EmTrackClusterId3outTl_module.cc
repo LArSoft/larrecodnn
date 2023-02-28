@@ -20,7 +20,6 @@
 
 #include "larrecodnn/ImagePatternAlgs/Modules/EmTrack.h"
 
-
 namespace nnet {
 
   class EmTrackClusterId3outTl : public art::EDProducer {
@@ -45,11 +44,7 @@ namespace nnet {
   {}
   // ------------------------------------------------------
 
-  void
-  EmTrackClusterId3outTl::produce(art::Event& evt)
-  {
-    fEmTrack.produce(evt);
-  }
+  void EmTrackClusterId3outTl::produce(art::Event& evt) { fEmTrack.produce(evt); }
   // ------------------------------------------------------
 
   DEFINE_ART_MODULE(EmTrackClusterId3outTl)

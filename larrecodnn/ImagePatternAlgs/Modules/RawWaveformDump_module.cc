@@ -128,28 +128,21 @@ private:
   bool isSorted = false;
 
 public:
-  void
-  sort_now()
+  void sort_now()
   {
     std::sort(this->track_id_map.begin(),
               this->track_id_map.end(),
               [](const auto& a, const auto& b) { return (a.first < b.first); });
     isSorted = true;
   }
-  void
-  add(const int& track_id, const std::string& gname)
+  void add(const int& track_id, const std::string& gname)
   {
     this->track_id_map.push_back(std::make_pair(track_id, gname));
     generator_names.emplace(gname);
     isSorted = false;
   }
-  bool
-  has_gen(std::string gname)
-  {
-    return static_cast<bool>(generator_names.count(gname));
-  };
-  std::string
-  get_gen(int tid)
+  bool has_gen(std::string gname) { return static_cast<bool>(generator_names.count(gname)); };
+  std::string get_gen(int tid)
   {
     if (!isSorted) { this->sort_now(); }
     return std::lower_bound(track_id_map.begin(),
@@ -197,8 +190,7 @@ nnet::RawWaveformDump::RawWaveformDump(fhicl::ParameterSet const& p)
 }
 
 //-----------------------------------------------------------------------
-void
-nnet::RawWaveformDump::beginJob()
+void nnet::RawWaveformDump::beginJob()
 {
   auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataForJob();
 
@@ -257,15 +249,13 @@ nnet::RawWaveformDump::beginJob()
 }
 
 //-----------------------------------------------------------------------
-void
-nnet::RawWaveformDump::endJob()
+void nnet::RawWaveformDump::endJob()
 {
   c2numpy_close(&npywriter);
 }
 
 //-----------------------------------------------------------------------
-void
-nnet::RawWaveformDump::analyze(art::Event const& evt)
+void nnet::RawWaveformDump::analyze(art::Event const& evt)
 {
   cout << "Event "
        << " " << evt.id().run() << " " << evt.id().subRun() << " " << evt.id().event() << endl;
@@ -342,8 +332,7 @@ nnet::RawWaveformDump::analyze(art::Event const& evt)
   }
 
   // ... Read in sim channel list
-  auto simChannelHandle =
-    evt.getValidHandle<std::vector<sim::SimChannel>>(fSimChannelLabel);
+  auto simChannelHandle = evt.getValidHandle<std::vector<sim::SimChannel>>(fSimChannelLabel);
 
   if (!simChannelHandle->size()) return;
 
@@ -476,9 +465,7 @@ nnet::RawWaveformDump::analyze(art::Event const& evt)
           rndm_dist(rndm_engine); // randomly select one channel with a signal from this particle
         chnum = ittrk.second[i];
 
-        if (not selected_channels.insert(chnum).second) {
-          continue;
-        }
+        if (not selected_channels.insert(chnum).second) { continue; }
 
         std::map<raw::ChannelID_t, std::map<int, WireSigInfo>>::iterator itchn;
         itchn = Ch2TrkWSInfoMap.find(chnum);

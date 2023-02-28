@@ -143,8 +143,7 @@ namespace nnet {
   }
   // ------------------------------------------------------
 
-  void
-  EmTrackClusterId2out::produce(art::Event& evt)
+  void EmTrackClusterId2out::produce(art::Event& evt)
   {
     mf::LogVerbatim("EmTrackClusterId2out")
       << "next event: " << evt.run() << " / " << evt.id().event();
@@ -405,8 +404,7 @@ namespace nnet {
   }
   // ------------------------------------------------------
 
-  bool
-  EmTrackClusterId2out::isViewSelected(int view) const
+  bool EmTrackClusterId2out::isViewSelected(int view) const
   {
     if (fViews.empty())
       return true;
