@@ -4,6 +4,9 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "art/Utilities/ToolMacros.h"
+#include "cetlib_except/exception.h"
+#include "fhiclcpp/ParameterSet.h"
+#include "fhiclcpp/types/Table.h"
 #include "larrecodnn/ImagePatternAlgs/ToolInterfaces/IPointIdAlg.h"
 
 // Nvidia Triton inference server client includes
@@ -11,6 +14,11 @@
 
 namespace ni = nvidia::inferenceserver;
 namespace nic = nvidia::inferenceserver::client;
+
+#include <algorithm>
+#include <memory>
+#include <string>
+#include <vector>
 
 namespace PointIdAlgTools {
 

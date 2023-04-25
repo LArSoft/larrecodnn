@@ -1,17 +1,14 @@
 #ifndef NuSonic_Triton_TritonClient
 #define NuSonic_Triton_TritonClient
 
-#include "fhiclcpp/ParameterSet.h"
 #include "larrecodnn/ImagePatternAlgs/NuSonic/Triton/TritonData.h"
+#include "fhiclcpp/fwd.h"
 
-#include <exception>
-#include <map>
+#include <memory>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 #include "grpc_client.h"
-#include "grpc_service.pb.h"
 
 namespace lartriton {
 

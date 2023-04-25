@@ -13,6 +13,13 @@
 // Based on the Analyzer module written by Mike Wang.
 ////////////////////////////////////////////////////////////////////////
 
+#include "larcore/CoreUtils/ServiceUtil.h"
+#include "larcore/Geometry/Geometry.h"
+#include "lardataobj/RawData/RawDigit.h"
+#include "lardataobj/RawData/raw.h"
+#include "lardataobj/RecoBase/Wire.h"
+#include "larrecodnn/ImagePatternAlgs/ToolInterfaces/IWaveformRecog.h"
+
 #include "art/Framework/Core/EDProducer.h"
 #include "art/Framework/Core/ModuleMacros.h"
 #include "art/Framework/Principal/Event.h"
@@ -20,17 +27,15 @@
 #include "art/Framework/Principal/Run.h"
 #include "art/Framework/Principal/SubRun.h"
 #include "art/Utilities/make_tool.h"
+#include "canvas/Persistency/Common/Ptr.h"
 #include "canvas/Utilities/InputTag.h"
+#include "cetlib_except/exception.h"
 #include "fhiclcpp/ParameterSet.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 
-#include "larcore/Geometry/Geometry.h"
-#include "lardataobj/RawData/RawDigit.h"
-#include "lardataobj/RawData/raw.h"
-#include "lardataobj/RecoBase/Wire.h"
-#include "larrecodnn/ImagePatternAlgs/ToolInterfaces/IWaveformRecog.h"
-
 #include <memory>
+#include <utility> // std::move()
+#include <vector>
 
 namespace nnet {
   class WaveformRoiFinder;
@@ -144,11 +149,13 @@ void nnet::WaveformRoiFinder::produce(art::Event& e)
     std::vector<float> sigs;
     int lastsignaltick = -1;
     int roistart = -1;
+    bool hasROI = false;
 
     recob::Wire::RegionsOfInterest_t rois(fWaveformSize);
 
     for (size_t i = 0; i < fWaveformSize; ++i) {
       if (inroi[i]) {
+        hasROI = true;
         if (sigs.empty()) {
           sigs.push_back(inputsignal[i]);
           lastsignaltick = i;
@@ -170,10 +177,10 @@ void nnet::WaveformRoiFinder::produce(art::Event& e)
       }
     }
     if (!sigs.empty()) { rois.add_range(roistart, std::move(sigs)); }
-    if (!wirelist.empty()) {
+    if (!wirelist.empty() && hasROI) {
       outwires->emplace_back(recob::Wire(rois, wirelist[ich]->Channel(), wirelist[ich]->View()));
     }
-    else if (!rawlist.empty()) {
+    else if (!rawlist.empty() && hasROI) {
       outwires->emplace_back(
         recob::Wire(rois, rawlist[ich]->Channel(), geo->View(rawlist[ich]->Channel())));
     }

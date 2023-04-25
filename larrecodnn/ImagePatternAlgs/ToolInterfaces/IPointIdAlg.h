@@ -16,10 +16,17 @@
 #ifndef IPointIdAlg_H
 #define IPointIdAlg_H
 
+#include "larreco/RecoAlg/ImagePatternAlgs/DataProvider/DataProviderAlg.h"
+
+#include "cetlib_except/exception.h"
+#include "fhiclcpp/types/Atom.h"
 #include "fhiclcpp/types/OptionalAtom.h"
 #include "fhiclcpp/types/OptionalSequence.h"
-#include "larreco/RecoAlg/ImagePatternAlgs/DataProvider/DataProviderAlg.h"
+#include "fhiclcpp/types/Sequence.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
+
+#include <string>
+#include <vector>
 
 namespace PointIdAlgTools {
   class IPointIdAlg : virtual public img::DataProviderAlg {
@@ -55,6 +62,10 @@ namespace PointIdAlgTools {
         Name("TritonVerbose"),
         Comment("Verbosity switch for Nvidia Triton inference server client"),
         false};
+      fhicl::Atom<unsigned> TritonAllowedTries{
+        Name("TritonAllowedTries"),
+        Comment("Number of allowed attempts for Nvidia Triton inference server client"),
+        1};
     };
     virtual ~IPointIdAlg() noexcept = default;
 

@@ -7,24 +7,42 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "larrecodnn/ImagePatternAlgs/Tensorflow/PointIdAlg/PointIdAlg.h"
-#include "larrecodnn/ImagePatternAlgs/Tensorflow/quiet_session.h"
 
-#include "art/Framework/Principal/Event.h"
-#include "art/Framework/Principal/Handle.h"
-#include "art/Framework/Services/Registry/ServiceHandle.h"
-#include "messagefacility/MessageLogger/MessageLogger.h"
-
-#include "larcore/CoreUtils/ServiceUtil.h" // lar::providerFrom<>()
-#include "larcorealg/Geometry/ChannelMapAlg.h"
-#include "larcorealg/Geometry/Exceptions.h" // geo::InvalidWireIDError
+#include "larcore/CoreUtils/ServiceUtil.h"                // lar::providerFrom<>()
+#include "larcorealg/Geometry/Exceptions.h"               // geo::InvalidWireIDError
+#include "larcoreobj/SimpleTypesAndConstants/RawTypes.h"  // raw::InvalidChannelID
+#include "larcoreobj/SimpleTypesAndConstants/geo_types.h" // geo::TPCID
+#include "lardata/DetectorInfoServices/DetectorClocksService.h"
+#include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
+#include "lardataobj/RecoBase/Hit.h"
+#include "lardataobj/RecoBase/Track.h"
+#include "lardataobj/RecoBase/Wire.h"
 #include "lardataobj/Simulation/SimChannel.h"
 #include "larevt/CalibrationDBI/Interface/ChannelStatusProvider.h"
 #include "larevt/CalibrationDBI/Interface/ChannelStatusService.h"
 #include "larsim/Simulation/LArG4Parameters.h"
 
-#include "CLHEP/Random/RandGauss.h"
+#include "art/Framework/Principal/Event.h"
+#include "art/Framework/Principal/Handle.h"
+#include "art/Framework/Services/Registry/ServiceHandle.h"
+#include "canvas/Persistency/Common/FindManyP.h"
+#include "canvas/Persistency/Common/Ptr.h"
+#include "canvas/Utilities/Exception.h"
+#include "cetlib/search_path.h"
+#include "cetlib_except/exception.h"
+#include "messagefacility/MessageLogger/MessageLogger.h"
 
+#include "tensorflow/core/public/session.h"
+
+#include "TMath.h"
+
+#include <algorithm>
+#include <cmath>
+#include <map>
+#include <string>
 #include <sys/stat.h>
+#include <unordered_map>
+#include <vector>
 
 // ------------------------------------------------------
 // -------------------ModelInterface---------------------
@@ -108,8 +126,10 @@ std::vector<std::vector<float>> nnet::TfModelInterface::Run(
 
   long long int rows = inps.front().size(), cols = inps.front().front().size();
 
-  tensorflow::Tensor _x(tensorflow::DT_FLOAT, tensorflow::TensorShape({samples, rows, cols, 1}));
-  auto input_map = _x.tensor<float, 4>();
+  std::vector<tensorflow::Tensor> _x;
+  _x.push_back(
+    tensorflow::Tensor(tensorflow::DT_FLOAT, tensorflow::TensorShape({samples, rows, cols, 1})));
+  auto input_map = _x[0].tensor<float, 4>();
   for (long long int s = 0; s < samples; ++s) {
     const auto& sample = inps[s];
     for (long long int r = 0; r < rows; ++r) {
@@ -120,7 +140,7 @@ std::vector<std::vector<float>> nnet::TfModelInterface::Run(
     }
   }
 
-  return g->run(_x);
+  return g->runx(_x);
 }
 // ------------------------------------------------------
 
@@ -128,8 +148,10 @@ std::vector<float> nnet::TfModelInterface::Run(std::vector<std::vector<float>> c
 {
   long long int rows = inp2d.size(), cols = inp2d.front().size();
 
-  tensorflow::Tensor _x(tensorflow::DT_FLOAT, tensorflow::TensorShape({1, rows, cols, 1}));
-  auto input_map = _x.tensor<float, 4>();
+  std::vector<tensorflow::Tensor> _x;
+  _x.push_back(
+    tensorflow::Tensor(tensorflow::DT_FLOAT, tensorflow::TensorShape({1, rows, cols, 1})));
+  auto input_map = _x[0].tensor<float, 4>();
   for (long long int r = 0; r < rows; ++r) {
     const auto& row = inp2d[r];
     for (long long int c = 0; c < cols; ++c) {
@@ -137,7 +159,7 @@ std::vector<float> nnet::TfModelInterface::Run(std::vector<std::vector<float>> c
     }
   }
 
-  auto out = g->run(_x);
+  auto out = g->runx(_x);
   if (!out.empty())
     return out.front();
   else
@@ -424,7 +446,7 @@ nnet::TrainingDataAlg::WireDrift nnet::TrainingDataAlg::getProjection(
   wd.Cryo = -1;
 
   try {
-    double vtx[3] = {tvec.X(), tvec.Y(), tvec.Z()};
+    geo::Point_t vtx{tvec.X(), tvec.Y(), tvec.Z()};
     if (fGeometry->FindTPCAtPosition(vtx).isValid) {
       geo::TPCID tpcid = fGeometry->FindTPCAtPosition(vtx);
       unsigned int tpc = tpcid.TPC, cryo = tpcid.Cryostat;
@@ -436,15 +458,15 @@ nnet::TrainingDataAlg::WireDrift nnet::TrainingDataAlg::getProjection(
       else if (driftDir != -1) {
         throw cet::exception("nnet::TrainingDataAlg") << "drift direction is not X." << std::endl;
       }
-      vtx[0] = tvec.X() + dx;
+      vtx.SetX(tvec.X() + dx);
 
-      wd.Wire = fGeometry->NearestWire(vtx, plane, tpc, cryo);
-      wd.Drift = detProp.ConvertXToTicks(vtx[0], plane, tpc, cryo);
+      wd.Wire = fGeometry->NearestWireID(vtx, geo::PlaneID{tpcid, plane}).Wire;
+      wd.Drift = detProp.ConvertXToTicks(vtx.X(), plane, tpc, cryo);
       wd.TPC = tpc;
       wd.Cryo = cryo;
     }
   }
-  catch (const geo::InvalidWireIDError& e) {
+  catch (const geo::InvalidWireError& e) {
     mf::LogWarning("TrainingDataAlg")
       << "Vertex projection out of wire planes, just skipping this vertex.";
   }
@@ -982,12 +1004,11 @@ bool nnet::TrainingDataAlg::setEventData(const art::Event& event,
         }
       }
 
-      if (ttc.first < labels_size) {
-        int tick_idx = ttc.first + fAdcDelay;
-        if (tick_idx < labels_size) {
-          labels_deposit[tick_idx] = max_deposit;
-          labels_pdg[tick_idx] = max_pdg & type_pdg_mask;
-        }
+      int tick_idx = clockData.TPCTDC2Tick(ttc.first) + fAdcDelay;
+
+      if (tick_idx < labels_size && tick_idx >= 0) {
+        labels_deposit[tick_idx] = max_deposit;
+        labels_pdg[tick_idx] = max_pdg & type_pdg_mask;
       }
     }
 

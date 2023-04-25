@@ -10,6 +10,7 @@
 ////////////////////////////////////////////////////////////////////////
 
 #include "larcoreobj/SimpleTypesAndConstants/PhysicalConstants.h"
+#include "lardata/ArtDataHelper/MVAReader.h"
 #include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
 #include "lardata/Utilities/DatabaseUtil.h"
@@ -33,20 +34,24 @@
 #include "art/Framework/Services/Registry/ServiceHandle.h"
 #include "art_root_io/TFileService.h"
 #include "canvas/Persistency/Common/FindManyP.h"
+#include "canvas/Persistency/Common/Ptr.h"
 #include "canvas/Utilities/InputTag.h"
+#include "cetlib_except/exception.h"
 #include "fhiclcpp/types/Atom.h"
+#include "fhiclcpp/types/Comment.h"
+#include "fhiclcpp/types/Name.h"
 #include "fhiclcpp/types/Table.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
-
-#include "lardata/ArtDataHelper/MVAReader.h"
-#include "lardata/DetectorInfoServices/DetectorClocksService.h"
 
 #include "TH1.h"
 #include "TTree.h"
 
+#include <array>
 #include <cmath>
 #include <fstream>
 #include <iostream>
+#include <unordered_map>
+#include <vector>
 
 #define MVA_LENGTH 4
 

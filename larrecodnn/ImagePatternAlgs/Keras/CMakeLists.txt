@@ -1,4 +1,8 @@
-art_make(LIB_LIBRARIES ${TBB})
+cet_make_library(SOURCE
+  keras_model.cc
+  LIBRARIES PRIVATE
+  TBB::tbb
+)
 
 add_subdirectory(Tools)
 

@@ -1,11 +1,11 @@
 #include "larrecodnn/ImagePatternAlgs/NuSonic/Triton/TritonClient.h"
-#include "art/Framework/Services/Registry/ServiceHandle.h"
-#include "canvas/Utilities/Exception.h"
 #include "larrecodnn/ImagePatternAlgs/NuSonic/Triton/triton_utils.h"
+
+#include "cetlib_except/exception.h"
+#include "fhiclcpp/ParameterSet.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 
 #include "grpc_client.h"
-#include "grpc_service.pb.h"
 
 #include <chrono>
 #include <cmath>

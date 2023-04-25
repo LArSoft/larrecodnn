@@ -6,13 +6,15 @@
 //  tjyang@fnal.gov
 //  wwu@fnal.gov
 //
-//  Include the following options:
-//    a) RawDigit or WireProducer
-//    b) save full waveform or short waveform
+//  This version:
+//    a) uses RawDigit or WireProducer
+//    b) saves full waveform or short waveform
+//       - for short waveform, picks signal
+//         associated with largest energy
+//         deposit & saves only tdcmin/tdcmaxes
+//         that are within window extents
 //
 //////////////////////////////////////////////
-
-#include <random>
 
 // Framework includes
 #include "art/Framework/Core/EDAnalyzer.h"
@@ -23,7 +25,9 @@
 #include "art/Framework/Principal/SubRun.h"
 #include "art/Framework/Services/Registry/ServiceHandle.h"
 #include "canvas/Persistency/Common/FindManyP.h"
+#include "canvas/Persistency/Common/Ptr.h"
 #include "canvas/Utilities/InputTag.h"
+#include "cetlib_except/exception.h"
 #include "fhiclcpp/ParameterSet.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 
@@ -38,21 +42,25 @@
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/Wire.h"
 #include "lardataobj/Simulation/SimChannel.h"
+#include "larevt/CalibrationDBI/Interface/ChannelStatusProvider.h"
+#include "larevt/CalibrationDBI/Interface/ChannelStatusService.h"
 #include "larsim/MCCheater/ParticleInventoryService.h"
+#include "nurandom/RandomUtils/NuRandomService.h"
 #include "nusimdata/SimulationBase/MCParticle.h"
 #include "nusimdata/SimulationBase/MCTruth.h"
 
-#include "larevt/CalibrationDBI/Interface/ChannelStatusProvider.h"
-#include "larevt/CalibrationDBI/Interface/ChannelStatusService.h"
-
-// DUNETPC specific includes
-//#include "dune/DAQTriggerSim/TriggerDataProducts/TriggerTypes.h"
-//#include "dune/DAQTriggerSim/TriggerDataProducts/BasicTrigger.h"
-//#include "dune/DuneInterface/AdcTypes.h"
-//#include "dune/DuneInterface/SimChannelExtractService.h"
-
-#include "TRandom.h"
+#include "CLHEP/Random/RandFlat.h"
 #include "c2numpy.h"
+
+#include <algorithm>
+#include <chrono>
+#include <cstdlib>
+#include <map>
+#include <random>
+#include <set>
+#include <string>
+#include <utility>
+#include <vector>
 
 using std::cout;
 using std::endl;
@@ -111,10 +119,12 @@ private:
   int fMinNumberOfElectrons;
   int fMaxNumberOfElectrons;
   bool fSaveSignal;
+  int fMaxNoiseChannelsPerEvent;
+  std::string fCollectionPlaneLabel;
   art::ServiceHandle<geo::Geometry> fgeom;
   art::ServiceHandle<cheat::ParticleInventoryService> PIS;
 
-  std::default_random_engine rndm_engine;
+  CLHEP::RandFlat fRandFlat;
 
   c2numpy_writer npywriter;
 };
@@ -152,7 +162,11 @@ public:
       ->second;
   };
 };
-std::unique_ptr<genFinder> gf(new genFinder());
+
+// Create the random number generator
+namespace {
+  std::string const instanceName = "RawWaveformDump";
+}
 
 //-----------------------------------------------------------------------
 nnet::RawWaveformDump::RawWaveformDump(fhicl::ParameterSet const& p)
@@ -167,14 +181,23 @@ nnet::RawWaveformDump::RawWaveformDump(fhicl::ParameterSet const& p)
   , fSelectGenLabel(p.get<std::string>("SelectGenLabel", "ANY"))
   , fSelectProcID(p.get<std::string>("SelectProcID", "ANY"))
   , fSelectPDGCode(p.get<int>("SelectPDGCode", 0))
-  , fPlaneToDump(p.get<std::string>("PlaneToDump", "U"))
+  , fPlaneToDump(p.get<std::string>("PlaneToDump"))
   , fMinParticleEnergyGeV(p.get<double>("MinParticleEnergyGeV", 0.))
   , fMinEnergyDepositedMeV(p.get<double>("MinEnergyDepositedMeV", 0.))
-  , fMinNumberOfElectrons(p.get<int>("MinNumberOfElectrons", 1000))
-  , fMaxNumberOfElectrons(p.get<int>("MaxNumberOfElectrons", 100000))
+  , fMinNumberOfElectrons(p.get<int>("MinNumberOfElectrons", 600))
+  , fMaxNumberOfElectrons(p.get<int>("MaxNumberOfElectrons", -1))
   , fSaveSignal(p.get<bool>("SaveSignal", true))
+  , fMaxNoiseChannelsPerEvent(p.get<int>("MaxNoiseChannelsPerEvent"))
+  , fCollectionPlaneLabel(p.get<std::string>("CollectionPlaneLabel"))
+  , fRandFlat{createEngine(art::ServiceHandle<rndm::NuRandomService> {}
+                             ->declareEngine(instanceName, p, "SeedForRawWaveformDump"),
+                           "HepJamesRandom",
+                           instanceName)}
 {
-  if (std::getenv("PROCESS")) { fDumpWaveformsFileName += string(std::getenv("PROCESS")) + "-"; }
+  if (std::getenv("CLUSTER") && std::getenv("PROCESS")) {
+    fDumpWaveformsFileName +=
+      string(std::getenv("CLUSTER")) + "-" + string(std::getenv("PROCESS")) + "-";
+  }
 
   if (fDigitModuleLabel.empty() && fWireProducerLabel.empty()) {
     throw cet::exception("RawWaveformDump")
@@ -185,17 +208,12 @@ nnet::RawWaveformDump::RawWaveformDump(fhicl::ParameterSet const& p)
     throw cet::exception("RawWaveformDump")
       << "Only one of DigitModuleLabel and WireProducerLabel should be set";
   }
-
-  //this->reconfigure(p);
 }
 
 //-----------------------------------------------------------------------
 void nnet::RawWaveformDump::beginJob()
 {
   auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataForJob();
-
-  std::random_device rndm_device; // this will give us our seed
-  rndm_engine.seed(rndm_device());
 
   c2numpy_init(&npywriter, fDumpWaveformsFileName, 50000);
   c2numpy_addcolumn(&npywriter, "evt", C2NUMPY_UINT32);
@@ -260,6 +278,8 @@ void nnet::RawWaveformDump::analyze(art::Event const& evt)
   cout << "Event "
        << " " << evt.id().run() << " " << evt.id().subRun() << " " << evt.id().event() << endl;
 
+  std::unique_ptr<genFinder> gf(new genFinder());
+
   // ... Read in the digit List object(s).
   art::Handle<std::vector<raw::RawDigit>> digitVecHandle;
   std::vector<art::Ptr<raw::RawDigit>> rawdigitlist;
@@ -298,8 +318,6 @@ void nnet::RawWaveformDump::analyze(art::Event const& evt)
     std::cout << "!!!!! Bad dataSize: " << dataSize << std::endl;
     return;
   }
-
-  //std::vector<short> rawadc(dataSize); // vector to hold uncompressed adc values later
 
   // ... Build a map from channel number -> rawdigitVec
   std::map<raw::ChannelID_t, art::Ptr<raw::RawDigit>> rawdigitMap;
@@ -460,9 +478,8 @@ void nnet::RawWaveformDump::analyze(art::Event const& evt)
     // ... Now write out the signal waveforms for each track
     if (!Trk2ChVecMap.empty()) {
       for (auto const& ittrk : Trk2ChVecMap) {
-        std::uniform_int_distribution<int> rndm_dist(0, ittrk.second.size() - 1);
-        int i =
-          rndm_dist(rndm_engine); // randomly select one channel with a signal from this particle
+        int i = fRandFlat.fireInt(
+          ittrk.second.size()); // randomly select one channel with a signal from this particle
         chnum = ittrk.second[i];
 
         if (not selected_channels.insert(chnum).second) { continue; }
@@ -493,83 +510,168 @@ void nnet::RawWaveformDump::analyze(art::Event const& evt)
             }
           }
 
-          c2numpy_uint32(&npywriter, evt.id().event());
-          c2numpy_uint32(&npywriter, chnum);
-          c2numpy_string(&npywriter, geo::PlaneGeo::ViewName(fgeom->View(chnum)).c_str());
-          c2numpy_uint16(&npywriter,
-                         itchn->second.size()); // size of Trk2WSInfoMap, or number of peaks
-
           // .. write out info for each peak
-          // a full waveform has at least one peak; the output will save up to 5 peaks (if there is only 1 peak, will fill the other 4 with 0);
+          // a full waveform has at least one peak; the output will save up to 5 peaks (if there is
+          // only 1 peak, will fill the other 4 with 0);
           // for fShortWaveformSize: only use the first peak's start_tick
 
-          int start_tick = -1;
-          int end_tick = -1;
+          if (fUseFullWaveform) {
 
-          unsigned int icnt = 0;
-          for (auto const& it : itchn->second) {
-            c2numpy_int32(&npywriter, it.first);                  // trackid
-            c2numpy_int32(&npywriter, it.second.pdgcode);         // pdgcode
-            c2numpy_string(&npywriter, it.second.genlab.c_str()); // genlab
-            c2numpy_string(&npywriter, it.second.procid.c_str()); // procid
-            c2numpy_float32(&npywriter, it.second.edep);          // edepo
-            c2numpy_uint32(&npywriter, it.second.numel);          // numelec
+            c2numpy_uint32(&npywriter, evt.id().event());
+            c2numpy_uint32(&npywriter, chnum);
+            c2numpy_string(&npywriter, geo::PlaneGeo::ViewName(fgeom->View(chnum)).c_str());
+            c2numpy_uint16(&npywriter, itchn->second.size()); // size of Trk2WSInfoMap, or #peaks
+            unsigned int icnt = 0;
+            for (auto const& it : itchn->second) {
+              c2numpy_int32(&npywriter, it.first);                  // trackid
+              c2numpy_int32(&npywriter, it.second.pdgcode);         // pdgcode
+              c2numpy_string(&npywriter, it.second.genlab.c_str()); // genlab
+              c2numpy_string(&npywriter, it.second.procid.c_str()); // procid
+              c2numpy_float32(&npywriter, it.second.edep);          // edepo
+              c2numpy_uint32(&npywriter, it.second.numel);          // numelec
 
-            if (fUseFullWaveform) {
               c2numpy_uint16(&npywriter, it.second.tdcmin); // stck1
               c2numpy_uint16(&npywriter, it.second.tdcmax); // stc2
-            }
-            else {
-              // select ticks to save
-              if (icnt == 0) {
-                start_tick = it.second.tdcmin - it.second.tdcmin % fShortWaveformSize;
-                if (it.second.tdcmin - start_tick < 30) start_tick = start_tick - 30;
-                if (it.second.tdcmax - start_tick > 120) start_tick = it.second.tdcmax - 120;
-                end_tick = start_tick + fShortWaveformSize;
 
-                if (end_tick >= 2048) {
-                  end_tick = 2048;
-                  start_tick = end_tick - fShortWaveformSize;
-                }
-
-                if (start_tick < 0) {
-                  start_tick = 0;
-                  end_tick = start_tick + fShortWaveformSize;
-                }
-              }
-
-              c2numpy_uint16(&npywriter, it.second.tdcmin - start_tick); // stck1
-              c2numpy_uint16(&npywriter, it.second.tdcmax - start_tick); // stc2
+              icnt++;
+              if (icnt == 5) break;
             }
 
-            icnt++;
-            if (icnt == 5) break;
-          }
+            // .. pad with 0's if number of peaks less than 5
+            for (unsigned int i = icnt; i < 5; ++i) {
+              c2numpy_int32(&npywriter, 0);
+              c2numpy_int32(&npywriter, 0);
+              c2numpy_string(&npywriter, dummystr6.c_str());
+              c2numpy_string(&npywriter, dummystr7.c_str());
+              c2numpy_float32(&npywriter, 0.);
+              c2numpy_uint32(&npywriter, 0);
+              c2numpy_uint16(&npywriter, 0);
+              c2numpy_uint16(&npywriter, 0);
+            }
 
-          // .. pad with 0's if number of peaks less than 5
-          for (unsigned int i = icnt; i < 5; ++i) {
-            c2numpy_int32(&npywriter, 0);
-            c2numpy_int32(&npywriter, 0);
-            c2numpy_string(&npywriter, dummystr6.c_str());
-            c2numpy_string(&npywriter, dummystr7.c_str());
-            c2numpy_float32(&npywriter, 0.);
-            c2numpy_uint32(&npywriter, 0);
-            c2numpy_uint16(&npywriter, 0);
-            c2numpy_uint16(&npywriter, 0);
-          }
-
-          // .. now write out the ADC values
-          if (fUseFullWaveform) {
             for (unsigned int itck = 0; itck < dataSize; ++itck) {
               c2numpy_int16(&npywriter, adcvec[itck]);
             }
           }
           else {
-            if (start_tick == -1) return;
 
-            for (unsigned int itck = start_tick; itck < (start_tick + fShortWaveformSize); ++itck) {
-              c2numpy_int16(&npywriter, adcvec[itck]);
+            // .. first loop to find largest signal
+            double EDep = 0.;
+            unsigned int TDCMin, TDCMax;
+            bool foundmaxsig = false;
+            for (auto& it : itchn->second) {
+              if (it.second.edep > EDep && it.second.numel > 0) {
+                EDep = it.second.edep;
+                TDCMin = it.second.tdcmin;
+                TDCMax = it.second.tdcmax;
+                foundmaxsig = true;
+              }
             }
+            if (foundmaxsig) {
+              int sigtdc1, sigtdc2, sighwid, sigfwid, sigtdcm;
+              if (fPlaneToDump != fCollectionPlaneLabel) {
+                sigtdc1 = TDCMin - 14 / 2;
+                sigtdc2 = TDCMax + 3 * 14 / 2;
+              }
+              else {
+                sigtdc1 = TDCMin - 32 / 2;
+                sigtdc2 = TDCMax + 32 / 2;
+              }
+              sigfwid = sigtdc2 - sigtdc1;
+              sighwid = sigfwid / 2;
+              sigtdcm = sigtdc1 + sighwid;
+
+              int start_tick = -1;
+              int end_tick = -1;
+              // .. set window edges to contain the largest signal
+              if (sigfwid < (int)fShortWaveformSize) {
+                // --> case 1: signal range fits within window
+                int dt = fShortWaveformSize - sigfwid;
+                start_tick = sigtdc1 - dt * fRandFlat.fire(0, 1);
+              }
+              else {
+                // --> case 2: signal range larger than window
+                int mrgn = fShortWaveformSize / 20;
+                int dt = fShortWaveformSize - 2 * mrgn;
+                start_tick = sigtdcm - mrgn - dt * fRandFlat.fire(0, 1);
+              }
+              if (start_tick < 0) start_tick = 0;
+              end_tick = start_tick + fShortWaveformSize - 1;
+              if (end_tick > int(dataSize - 1)) {
+                end_tick = dataSize - 1;
+                start_tick = end_tick - fShortWaveformSize + 1;
+              }
+
+              c2numpy_uint32(&npywriter, evt.id().event());
+              c2numpy_uint32(&npywriter, chnum);
+              c2numpy_string(&npywriter, geo::PlaneGeo::ViewName(fgeom->View(chnum)).c_str());
+
+              // .. second loop to select only signals that are within the window
+
+              int it_trk[5], it_pdg[5], it_nel[5];
+              unsigned int stck_1[5], stck_2[5];
+              std::string it_glb[5], it_prc[5];
+              double it_edp[5];
+
+              unsigned int icnt = 0;
+
+              for (auto& it : itchn->second) {
+                if ((it.second.tdcmin >= (unsigned int)start_tick &&
+                     it.second.tdcmin < (unsigned int)end_tick) ||
+                    (it.second.tdcmax > (unsigned int)start_tick &&
+                     it.second.tdcmax <= (unsigned int)end_tick)) {
+
+                  it_trk[icnt] = it.first;
+                  it_pdg[icnt] = it.second.pdgcode;
+                  it_glb[icnt] = it.second.genlab;
+                  it_prc[icnt] = it.second.procid;
+                  it_edp[icnt] = it.second.edep;
+                  it_nel[icnt] = it.second.numel;
+
+                  unsigned int mintdc = it.second.tdcmin;
+                  unsigned int maxtdc = it.second.tdcmax;
+                  if (mintdc < (unsigned int)start_tick) mintdc = start_tick;
+                  if (maxtdc > (unsigned int)end_tick) maxtdc = end_tick;
+
+                  stck_1[icnt] = mintdc - start_tick;
+                  stck_2[icnt] = maxtdc - start_tick;
+
+                  icnt++;
+                  if (icnt == 5) break;
+                }
+              }
+
+              c2numpy_uint16(&npywriter, icnt); // number of peaks
+
+              for (unsigned int i = 0; i < icnt; ++i) {
+                c2numpy_int32(&npywriter, it_trk[i]);          // trackid
+                c2numpy_int32(&npywriter, it_pdg[i]);          // pdgcode
+                c2numpy_string(&npywriter, it_glb[i].c_str()); // genlab
+                c2numpy_string(&npywriter, it_prc[i].c_str()); // procid
+                c2numpy_float32(&npywriter, it_edp[i]);        // edepo
+                c2numpy_uint32(&npywriter, it_nel[i]);         // numelec
+                c2numpy_uint16(&npywriter, stck_1[i]);         // stck1
+                c2numpy_uint16(&npywriter, stck_2[i]);         // stck2
+              }
+
+              // .. pad with 0's if number of peaks less than 5
+              for (unsigned int i = icnt; i < 5; ++i) {
+                c2numpy_int32(&npywriter, 0);
+                c2numpy_int32(&npywriter, 0);
+                c2numpy_string(&npywriter, dummystr6.c_str());
+                c2numpy_string(&npywriter, dummystr7.c_str());
+                c2numpy_float32(&npywriter, 0.);
+                c2numpy_uint32(&npywriter, 0);
+                c2numpy_uint16(&npywriter, 0);
+                c2numpy_uint16(&npywriter, 0);
+              }
+
+              for (unsigned int itck = start_tick; itck < (start_tick + fShortWaveformSize);
+                   ++itck) {
+                c2numpy_int16(&npywriter, adcvec[itck]);
+              }
+
+            } // foundmaxsig
           }
         }
       }
@@ -582,14 +684,23 @@ void nnet::RawWaveformDump::analyze(art::Event const& evt)
     for (auto const& channel : (*simChannelHandle)) {
       signalMap[channel.Channel()] = true;
     }
+    // .. create a vector for shuffling the wire channel indices
+    auto seed = std::chrono::high_resolution_clock::now().time_since_epoch().count();
+    size_t nchan = (rawdigitlist.empty() ? wirelist.size() : rawdigitlist.size());
+    std::vector<size_t> randigitmap;
+    for (size_t i = 0; i < nchan; ++i)
+      randigitmap.push_back(i);
+    std::shuffle(randigitmap.begin(), randigitmap.end(), std::mt19937(seed));
 
     for (size_t rdIter = 0; rdIter < (rawdigitlist.empty() ? wirelist.size() : rawdigitlist.size());
          ++rdIter) {
 
-      std::vector<short> adcvec(dataSize); // vector to wire adc values
+      if (noisechancount == fMaxNoiseChannelsPerEvent) break;
 
+      std::vector<short> adcvec(dataSize); // vector to wire adc values
       if (rawdigitlist.size()) {
-        art::Ptr<raw::RawDigit> digitVec(digitVecHandle, rdIter);
+        size_t ranIdx = randigitmap[rdIter];
+        art::Ptr<raw::RawDigit> digitVec(digitVecHandle, ranIdx);
         if (signalMap[digitVec->Channel()]) continue;
 
         std::vector<short> rawadc(dataSize); // vector to hold uncompressed adc values later
@@ -604,7 +715,8 @@ void nnet::RawWaveformDump::analyze(art::Event const& evt)
                        geo::PlaneGeo::ViewName(fgeom->View(digitVec->Channel())).c_str());
       }
       else if (wirelist.size()) {
-        art::Ptr<recob::Wire> wire = wirelist[rdIter];
+        size_t ranIdx = randigitmap[rdIter];
+        art::Ptr<recob::Wire> wire = wirelist[ranIdx];
         if (signalMap[wire->Channel()]) continue;
         if (channelStatus.IsBad(evt.time().value(), wire->Channel())) continue;
         if (geo::PlaneGeo::ViewName(fgeom->View(wire->Channel())) != fPlaneToDump[0]) continue;
@@ -635,7 +747,7 @@ void nnet::RawWaveformDump::analyze(art::Event const& evt)
         }
       }
       else {
-        int start_tick = int((2048 - fShortWaveformSize) * gRandom->Uniform(0, 1));
+        int start_tick = int((dataSize - fShortWaveformSize) * fRandFlat.fire(0, 1));
         for (unsigned int itck = start_tick; itck < (start_tick + fShortWaveformSize); ++itck) {
           c2numpy_int16(&npywriter, adcvec[itck]);
         }

@@ -4,8 +4,15 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "art/Utilities/ToolMacros.h"
+#include "fhiclcpp/ParameterSet.h"
+#include "fhiclcpp/types/Table.h"
 #include "larrecodnn/ImagePatternAlgs/NuSonic/Triton/TritonClient.h"
 #include "larrecodnn/ImagePatternAlgs/ToolInterfaces/IPointIdAlg.h"
+#include "messagefacility/MessageLogger/MessageLogger.h"
+
+#include <memory>
+#include <string>
+#include <vector>
 
 namespace PointIdAlgTools {
 
@@ -44,6 +51,7 @@ namespace PointIdAlgTools {
     fTritonURL = table().TritonURL();
     fTritonVerbose = table().TritonVerbose();
     fTritonModelVersion = table().TritonModelVersion();
+    fTritonAllowedTries = table().TritonAllowedTries();
 
     // ... Create parameter set for Triton inference client
     fhicl::ParameterSet TritonPset;
