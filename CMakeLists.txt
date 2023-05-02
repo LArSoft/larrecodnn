@@ -9,7 +9,7 @@
 cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 
 find_package(cetmodules REQUIRED)
-project(larrecodnn VERSION 09.18.01 LANGUAGES CXX)
+project(larrecodnn VERSION 09.20.00 LANGUAGES CXX)
 
 include(CetCMakeEnv)
 cet_cmake_env()
@@ -54,7 +54,7 @@ find_package(TensorFlow 2.6.0 QUIET EXPORT)
 find_package(Threads REQUIRED EXPORT)
 
 find_package(HDF5 REQUIRED EXPORT)
-find_package(hep_hpc REQUIRED EXPORT) 
+find_package(hep_hpc REQUIRED EXPORT)
 
 # macros for dictionary and simple_plugin
 include(ArtDictionary)
