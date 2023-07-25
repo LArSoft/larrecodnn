@@ -316,7 +316,7 @@ namespace nnet {
                                                     cidx,
                                                     (geo::View_t)view,
                                                     v.front()->WireID().planeID()));
-              util::CreateAssn(*this, evt, *clusters, v, *clu2hit);
+              util::CreateAssn(evt, *clusters, v, *clu2hit);
               cidx++;
 
               fMVAWriter.addOutput(cluID, vout); // add copy of the input cluster
@@ -361,7 +361,7 @@ namespace nnet {
                                                     cidx,
                                                     (geo::View_t)view,
                                                     hitPtrList[h]->WireID().planeID()));
-              util::CreateAssn(*this, evt, *clusters, cluster_hits, *clu2hit);
+              util::CreateAssn(evt, *clusters, cluster_hits, *clu2hit);
               cidx++;
 
               fMVAWriter.addOutput(cluID, vout); // add single-hit cluster tagging unclutered hit
