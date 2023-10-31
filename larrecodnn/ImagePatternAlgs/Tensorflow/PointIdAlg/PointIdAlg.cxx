@@ -18,8 +18,7 @@
 #include "lardataobj/RecoBase/Track.h"
 #include "lardataobj/RecoBase/Wire.h"
 #include "lardataobj/Simulation/SimChannel.h"
-#include "larevt/CalibrationDBI/Interface/ChannelStatusProvider.h"
-#include "larevt/CalibrationDBI/Interface/ChannelStatusService.h"
+#include "larevt/CalibrationDBI/IOVData/ChannelStatusData.h"
 #include "larsim/Simulation/LArG4Parameters.h"
 
 #include "art/Framework/Principal/Event.h"
@@ -720,6 +719,7 @@ void nnet::TrainingDataAlg::collectVtxFlags(
 bool nnet::TrainingDataAlg::setDataEventData(const art::Event& event,
                                              detinfo::DetectorClocksData const& clockData,
                                              detinfo::DetectorPropertiesData const& detProp,
+                                             lariov::ChannelStatusData const& channelStatus,
                                              unsigned int plane,
                                              unsigned int tpc,
                                              unsigned int cryo)
@@ -730,7 +730,7 @@ bool nnet::TrainingDataAlg::setDataEventData(const art::Event& event,
 
   if (event.getByLabel(fWireProducerLabel, wireHandle)) art::fill_ptr_vector(Wirelist, wireHandle);
 
-  if (!setWireDriftData(clockData, detProp, *wireHandle, plane, tpc, cryo, event.time())) {
+  if (!setWireDriftData(clockData, detProp, channelStatus , *wireHandle, plane, tpc, cryo)) {
     mf::LogError("TrainingDataAlg") << "Wire data not set.";
     return false;
   }
@@ -867,6 +867,7 @@ bool nnet::TrainingDataAlg::setDataEventData(const art::Event& event,
 bool nnet::TrainingDataAlg::setEventData(const art::Event& event,
                                          detinfo::DetectorClocksData const& clockData,
                                          detinfo::DetectorPropertiesData const& detProp,
+    lariov::ChannelStatusData const& channelStatus,
                                          unsigned int plane,
                                          unsigned int tpc,
                                          unsigned int cryo)
@@ -874,7 +875,7 @@ bool nnet::TrainingDataAlg::setEventData(const art::Event& event,
   art::ValidHandle<std::vector<recob::Wire>> wireHandle =
     event.getValidHandle<std::vector<recob::Wire>>(fWireProducerLabel);
 
-  if (!setWireDriftData(clockData, detProp, *wireHandle, plane, tpc, cryo, event.time())) {
+  if (!setWireDriftData(clockData, detProp, channelStatus, *wireHandle, plane, tpc, cryo)) {
     mf::LogError("TrainingDataAlg") << "Wire data not set.";
     return false;
   }

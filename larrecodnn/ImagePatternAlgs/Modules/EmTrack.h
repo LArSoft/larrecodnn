@@ -9,6 +9,7 @@
 #include "lardataobj/RecoBase/Cluster.h"
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/Track.h"
+#include "larevt/CalibrationDBI/Interface/ChannelStatusService.h"
 
 #include "art/Framework/Core/ProducesCollector.h"
 #include "art/Framework/Principal/Event.h"
@@ -352,19 +353,20 @@ namespace nnet {
     auto const detProp =
       art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(
         evt, clockData);
+    auto const channelStatus =
+      art::ServiceHandle<lariov::ChannelStatusService const>()->DataFor(evt);
     auto wireHandle =
       evt.getValidHandle<std::vector<recob::Wire>>(fWireProducerLabel);
     std::vector<char> hitInFA(hitPtrList.size(),
                               0); // tag hits in fid. area as 1, use 0 for hits
                                   // close to the projectrion edges
-    auto t = evt.time();
     for (auto const& [key, hits] : hitMap) {
       auto const& [cryo, tpc, view] = key;
       if (!isViewSelected(view))
         continue; // should not happen, hits were selected
 
       fPointIdAlgTool->setWireDriftData(
-        clockData, detProp, *wireHandle, view, tpc, cryo, t);
+        clockData, detProp, *channelStatus, *wireHandle, view, tpc, cryo);
 
       // (1) do all hits in this plane
       // ------------------------------------------------

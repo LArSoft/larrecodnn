@@ -21,6 +21,7 @@ namespace detinfo {
   class DetectorPropertiesData;
 }
 
+#include "larevt/CalibrationDBI/IOVData/ChannelStatusData.h"
 #include "larreco/RecoAlg/ImagePatternAlgs/DataProvider/DataProviderAlg.h"
 #include "larrecodnn/ImagePatternAlgs/Keras/keras_model.h"
 #include "larrecodnn/ImagePatternAlgs/Tensorflow/TF/tf_graph.h"
@@ -265,6 +266,7 @@ public:
     const art::Event& event, // collect & downscale ADC's, charge deposits, pdg labels
     detinfo::DetectorClocksData const& clockData,
     detinfo::DetectorPropertiesData const& detProp,
+    lariov::ChannelStatusData const& channelStatus,
     unsigned int plane,
     unsigned int tpc,
     unsigned int cryo);
@@ -273,6 +275,7 @@ public:
     const art::Event& event, // collect & downscale ADC's, charge deposits, pdg labels
     detinfo::DetectorClocksData const& clockData,
     detinfo::DetectorPropertiesData const& detProp,
+    lariov::ChannelStatusData const& channelStatus,
     unsigned int plane,
     unsigned int tpc,
     unsigned int cryo);

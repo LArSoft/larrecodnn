@@ -26,6 +26,7 @@
 #include "lardataobj/RecoBase/Track.h"
 #include "lardataobj/RecoBase/Wire.h"
 #include "larrecodnn/ImagePatternAlgs/Tensorflow/PointIdAlg/PointIdAlg.h"
+#include "larevt/CalibrationDBI/Interface/ChannelStatusService.h"
 
 #include "art/Framework/Core/EDProducer.h"
 #include "art/Framework/Core/ModuleMacros.h"
@@ -186,7 +187,6 @@ namespace nnet {
     }
 
     // ********************* classify hits **********************
-    auto t = evt.time();
     auto hitID = fMVAWriter.initOutputs<recob::Hit>(
       fHitModuleLabel, hitPtrList.size(), fPointIdAlg.outputLabels());
 
@@ -194,6 +194,8 @@ namespace nnet {
     auto const detProp =
       art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(evt, clockData);
 
+    auto const channelStatus =
+      art::ServiceHandle<lariov::ChannelStatusService const>()->DataFor(evt);
     std::vector<char> hitInFA(
       hitPtrList.size(),
       0); // tag hits in fid. area as 1, use 0 for hits close to the projectrion edges
@@ -205,7 +207,7 @@ namespace nnet {
           view = pview.first;
           if (!isViewSelected(view)) continue; // should not happen, hits were selected
 
-          fPointIdAlg.setWireDriftData(clockData, detProp, *wireHandle, view, tpc, cryo, t);
+          fPointIdAlg.setWireDriftData(clockData, detProp, *channelStatus, *wireHandle, view, tpc, cryo);
 
           // (1) do all hits in this plane ------------------------------------------------
           for (size_t idx = 0; idx < pview.second.size(); idx += fBatchSize) {

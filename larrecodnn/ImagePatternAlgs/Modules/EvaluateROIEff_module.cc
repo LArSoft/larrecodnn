@@ -103,7 +103,7 @@ void nnet::EvaluateROIEff::analyze(art::Event const& e)
   auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(e);
   auto const detProp =
     art::ServiceHandle<detinfo::DetectorPropertiesService>()->DataFor(e, clockData);
-  auto const& chStatus = art::ServiceHandle<lariov::ChannelStatusService>()->GetProvider();
+  auto const& chStatus = art::ServiceHandle<lariov::ChannelStatusService>()->DataFor(e);
 
   art::Handle<std::vector<recob::Wire>> wireListHandle;
   std::vector<art::Ptr<recob::Wire>> wires;
@@ -112,14 +112,13 @@ void nnet::EvaluateROIEff::analyze(art::Event const& e)
   }
 
   auto simChannelHandle = e.getValidHandle<std::vector<sim::SimChannel>>(fSimulationProducerLabel);
-  auto ts = e.time().value();
   // efficiency: according to each simulated energy deposit
   // ... Loop over simChannels
   for (auto const& channel : (*simChannelHandle)) {
 
     // .. get simChannel channel number
     const raw::ChannelID_t ch1 = channel.Channel();
-    if (chStatus.IsBad(ts, ch1)) continue;
+    if (chStatus->IsBad(ch1)) continue;
 
     if (ch1 % 1000 == 0) mf::LogInfo("EvaluateROIEFF") << ch1;
     int view = geo->View(ch1);
@@ -291,7 +290,7 @@ void nnet::EvaluateROIEff::analyze(art::Event const& e)
 
   for (auto& wire : wires) {
     const raw::ChannelID_t wirechannel = wire->Channel();
-    if (chStatus.IsBad(ts, wirechannel)) continue;
+    if (chStatus->IsBad(wirechannel)) continue;
 
     int view = wire->View();
 

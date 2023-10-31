@@ -298,8 +298,8 @@ void nnet::RawWaveformDump::analyze(art::Event const& evt)
   if (rawdigitlist.size() && wirelist.size()) return;
 
   // channel status
-  lariov::ChannelStatusProvider const& channelStatus =
-    art::ServiceHandle<lariov::ChannelStatusService const>()->GetProvider();
+  auto const& channelStatus =
+    art::ServiceHandle<lariov::ChannelStatusService const>()->DataFor(evt);
 
   auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataFor(evt);
   auto const detProp =
@@ -718,7 +718,7 @@ void nnet::RawWaveformDump::analyze(art::Event const& evt)
         size_t ranIdx = randigitmap[rdIter];
         art::Ptr<recob::Wire> wire = wirelist[ranIdx];
         if (signalMap[wire->Channel()]) continue;
-        if (channelStatus.IsBad(evt.time().value(), wire->Channel())) continue;
+        if (channelStatus->IsBad(wire->Channel())) continue;
         if (geo::PlaneGeo::ViewName(fgeom->View(wire->Channel())) != fPlaneToDump[0]) continue;
         const auto& signal = wire->Signal();
         for (size_t j = 0; j < adcvec.size(); ++j) {

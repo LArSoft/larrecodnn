@@ -16,6 +16,7 @@
 #include "lardataobj/RecoBase/Track.h"
 #include "lardataobj/RecoBase/Vertex.h"
 #include "lardataobj/RecoBase/Wire.h"
+#include "larevt/CalibrationDBI/Interface/ChannelStatusService.h"
 #include "larrecodnn/ImagePatternAlgs/Tensorflow/PointIdAlg/PointIdAlg.h"
 
 #include "art/Framework/Core/EDProducer.h"
@@ -86,11 +87,11 @@ namespace nnet {
 
     bool DetectDecay(detinfo::DetectorClocksData const& clockData,
                      detinfo::DetectorPropertiesData const& detProp,
+                     lariov::ChannelStatusData const& channelStatus,
                      const std::vector<recob::Wire>& wires,
                      const std::vector<art::Ptr<recob::Hit>>& hits,
                      std::map<size_t, TVector3>& spoints,
-                     std::vector<std::pair<TVector3, double>>& result,
-                     art::Timestamp t);
+                     std::vector<std::pair<TVector3, double>>& result);
 
     PointIdAlg fPointIdAlg;
 
@@ -136,8 +137,9 @@ namespace nnet {
     auto const detProp =
       art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(evt, clockData);
 
+    auto const channelStatus =
+      art::ServiceHandle<lariov::ChannelStatusService const>()->DataFor(evt);
     std::vector<std::pair<TVector3, double>> decays;
-    auto t = evt.time();
     for (size_t i = 0; i < hitsFromTracks.size(); ++i) {
       auto hits = hitsFromTracks.at(i);
       auto spoints = spFromTracks.at(i);
@@ -151,7 +153,7 @@ namespace nnet {
         }
       }
 
-      DetectDecay(clockData, detProp, *wireHandle, hits, trkSpacePoints, decays, t);
+      DetectDecay(clockData, detProp, *channelStatus, *wireHandle, hits, trkSpacePoints, decays);
     }
 
     double xyz[3];
@@ -180,11 +182,11 @@ namespace nnet {
 
   bool ParticleDecayId::DetectDecay(detinfo::DetectorClocksData const& clockData,
                                     detinfo::DetectorPropertiesData const& detProp,
+                                    lariov::ChannelStatusData const& channelStatus,
                                     const std::vector<recob::Wire>& wires,
                                     const std::vector<art::Ptr<recob::Hit>>& hits,
                                     std::map<size_t, TVector3>& spoints,
-                                    std::vector<std::pair<TVector3, double>>& result,
-                                    art::Timestamp t)
+                                    std::vector<std::pair<TVector3, double>>& result)
   {
     const size_t nviews = 3;
 
@@ -203,7 +205,7 @@ namespace nnet {
         int tpc = wire_drift[v][i]->WireID().TPC;
         int cryo = wire_drift[v][i]->WireID().Cryostat;
 
-        fPointIdAlg.setWireDriftData(clockData, detProp, wires, v, tpc, cryo, t);
+        fPointIdAlg.setWireDriftData(clockData, detProp, channelStatus, wires, v, tpc, cryo);
 
         outputs[v][i] = fPointIdAlg.predictIdVector(wire_drift[v][i]->WireID().Wire,
                                                     wire_drift[v][i]->PeakTime())[0]; // p(decay)

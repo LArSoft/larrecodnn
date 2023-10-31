@@ -12,6 +12,7 @@
 #include "larcorealg/Geometry/GeometryCore.h"
 #include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
+#include "larevt/CalibrationDBI/Interface/ChannelStatusService.h"
 #include "larrecodnn/ImagePatternAlgs/Modules/c2numpy.h"
 #include "larrecodnn/ImagePatternAlgs/Tensorflow/PointIdAlg/PointIdAlg.h"
 
@@ -258,12 +259,14 @@ namespace nnet {
     auto const detProp =
       art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(event, clockData);
 
+    auto const channelStatus =
+      art::ServiceHandle<lariov::ChannelStatusService const>()->DataFor(event);
     CLHEP::RandFlat flat(fEngine);
 
     for (size_t i = 0; i < fSelectedTPC.size(); ++i)
       for (size_t v = 0; v < fSelectedPlane.size(); ++v) {
         fTrainingDataAlg.setEventData(
-          event, clockData, detProp, fSelectedPlane[v], fSelectedTPC[i], 0);
+          event, clockData, detProp, *channelStatus, fSelectedPlane[v], fSelectedTPC[i], 0);
 
         unsigned int w0, w1, d0, d1;
         if (fCrop && saveSim) {
