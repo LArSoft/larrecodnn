@@ -36,6 +36,8 @@ find_package(larcore REQUIRED EXPORT)
 find_package(lardataobj REQUIRED EXPORT)
 find_package(larcorealg REQUIRED EXPORT)
 find_package(larcoreobj REQUIRED EXPORT)
+find_package(Torch REQUIRED EXPORT)
+find_package(TorchScatter REQUIRED EXPORT)
 
 find_package(nusimdata REQUIRED EXPORT)
 find_package(nurandom REQUIRED EXPORT)
