@@ -1,7 +1,9 @@
 #ifndef NuSonic_Triton_TritonData
 #define NuSonic_Triton_TritonData
 
+#include "cetlib_except/exception.h"
 #include "larrecodnn/ImagePatternAlgs/NuSonic/Triton/Span.h"
+#include "larrecodnn/ImagePatternAlgs/NuSonic/Triton/triton_utils.h"
 
 #include <algorithm>
 #include <any>
@@ -44,8 +46,44 @@ namespace lartriton {
     bool setShape(unsigned loc, int64_t val) { return setShape(loc, val, true); }
 
     //io accessors
+    //**this was moved here from TritonData.cc with minor modifications to get it to work
+    //with NuGraph, pls see the .cc code for unmodified version**
     template <typename DT>
-    void toServer(std::shared_ptr<TritonInput<DT>> ptr);
+    void toServer(std::shared_ptr<TritonInput<DT>> ptr)
+    {
+      const auto& data_in = *ptr;
+
+      //check batch size
+      if (data_in.size() != batchSize_) {
+        throw cet::exception("TritonDataError")
+          << name_ << " input(): input vector has size " << data_in.size()
+          << " but specified batch size is " << batchSize_;
+      }
+
+      //shape must be specified for variable dims or if batch size changes
+      //**this line doesn't seem to be necessary in this version of the code, see TODO below**
+      data_->SetShape(fullShape_);
+
+      if (byteSize_ != sizeof(DT))
+        throw cet::exception("TritonDataError")
+          << name_ << " input(): inconsistent byte size " << sizeof(DT) << " (should be "
+          << byteSize_ << " for " << dname_ << ")";
+
+      for (unsigned i0 = 0; i0 < batchSize_; ++i0) {
+        const DT* arr = data_in[i0].data();
+        triton_utils::throwIfError(
+          //**TODO: Currently, we assume each i0'th entry is 1-Dimensional, i.e. already pre-flattened
+          //if not 1-D. May be possible to remove this assumption by using SetShape and sizeShape to
+          //accommodate any input data shape, which seems to have been the original intention. See
+          //TritonData.cc for the original version of toServer**
+          data_->AppendRaw(reinterpret_cast<const uint8_t*>(arr), data_in[i0].size() * byteSize_),
+          name_ + " input(): unable to set data for batch entry " + std::to_string(i0));
+      }
+
+      //keep input data in scope
+      holder_ = std::move(ptr);
+    }
+
     template <typename DT>
     TritonOutput<DT> fromServer() const;
 

@@ -1,5 +1,4 @@
 #include "larrecodnn/ImagePatternAlgs/NuSonic/Triton/TritonData.h"
-#include "cetlib_except/exception.h"
 #include "larrecodnn/ImagePatternAlgs/NuSonic/Triton/triton_utils.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 
@@ -105,7 +104,10 @@ namespace lartriton {
   }
 
   //io accessors
-  template <>
+
+  //**toServer section below moved to .h file to get it to work with NuGraph, please
+  //refer to that file for more info**
+  /*template <>
   template <typename DT>
   void TritonInputData::toServer(std::shared_ptr<TritonInput<DT>> ptr)
   {
@@ -136,7 +138,7 @@ namespace lartriton {
 
     //keep input data in scope
     holder_ = std::move(ptr);
-  }
+  }*/
 
   template <>
   template <typename DT>
