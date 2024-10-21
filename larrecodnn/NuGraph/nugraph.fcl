@@ -19,4 +19,94 @@ NuGraph: {
    module_type: "NuGraphInference"
 }
 
+NuGraphTriton: { 
+   planes: ["u","v","y"]
+   hitInput: "nuslhits"
+   spsInput: "sps"
+   minHits: 10
+   debug: false
+   filterDecoder:   true
+   semanticDecoder: true
+   vertexDecoder:   false
+   url: "test-1-eaf.fnal.gov:443"
+   ssl: true
+   modelName: "nugraph2"
+   module_type: "NuGraphInferenceTriton"
+}
+
+CPUNuGraphTriton: { 
+   planes: ["u","v","y"]
+   hitInput: "nuslhits"
+   spsInput: "sps"
+   minHits: 10
+   debug: false
+   filterDecoder:   true
+   semanticDecoder: true
+   vertexDecoder:   false
+   url: "test-1-eaf.fnal.gov:443"
+   ssl: true
+   modelName: "nugraph2_cpu"
+   module_type: "NuGraphInferenceTriton"
+}
+
+ApptainerNuGraphTriton: { 
+   planes: ["u","v","y"]
+   hitInput: "nuslhits"
+   spsInput: "sps"
+   minHits: 10
+   debug: false
+   filterDecoder:   true
+   semanticDecoder: true
+   vertexDecoder:   false
+   url: "localhost:8001"
+   ssl: false
+   modelName: "nugraph2"
+   module_type: "NuGraphInferenceTriton"
+}
+
+NuGraphNuSonicTriton: { 
+   planes: ["u","v","y"]
+   hitInput: "nuslhits"
+   spsInput: "sps"
+   minHits: 10
+   debug: false
+   filterDecoder:   true
+   semanticDecoder: true
+   vertexDecoder:   false
+   url: "test-1-eaf.fnal.gov:443"
+   ssl: true
+   modelName: "nugraph2"
+   module_type: "NuGraphInferenceSonicTriton"
+}
+
+CPUNuGraphNuSonicTriton: { 
+   planes: ["u","v","y"]
+   hitInput: "nuslhits"
+   spsInput: "sps"
+   minHits: 10
+   debug: false
+   filterDecoder:   true
+   semanticDecoder: true
+   vertexDecoder:   false
+   url: "test-1-eaf.fnal.gov:443"
+   ssl: true
+   modelName: "nugraph2_cpu"
+   module_type: "NuGraphInferenceSonicTriton"
+}
+
+ApptainerNuGraphNuSonicTriton: { 
+   planes: ["u","v","y"]
+   hitInput: "nuslhits"
+   spsInput: "sps"
+   minHits: 10
+   debug: false
+   filterDecoder:   true
+   semanticDecoder: true
+   vertexDecoder:   false
+   url: "localhost:8001"
+   ssl: false
+   modelName: "nugraph2"
+   module_type: "NuGraphInferenceSonicTriton"
+}
+
 END_PROLOG
