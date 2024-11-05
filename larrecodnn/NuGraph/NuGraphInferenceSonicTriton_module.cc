@@ -136,7 +136,11 @@ private:
   bool semanticDecoder;
   bool vertexDecoder;
   std::string inference_url;
+  std::string inference_model_name;
   bool inference_ssl;
+  std::string ssl_root_certificates;
+  std::string ssl_private_key;
+  std::string ssl_certificate_chain;
 };
 
 NuGraphInferenceSonicTriton::NuGraphInferenceSonicTriton(fhicl::ParameterSet const& p)
@@ -150,13 +154,12 @@ NuGraphInferenceSonicTriton::NuGraphInferenceSonicTriton(fhicl::ParameterSet con
   , semanticDecoder(p.get<bool>("semanticDecoder"))
   , vertexDecoder(p.get<bool>("vertexDecoder"))
   , inference_url(p.get<std::string>("url"))
+  , inference_model_name(p.get<std::string>("modelName"))
   , inference_ssl(p.get<bool>("ssl"))
+  , ssl_root_certificates(p.get<std::string>("sslRootCertificates", ""))
+  , ssl_private_key(p.get<std::string>("sslPrivateKey", ""))
+  , ssl_certificate_chain(p.get<std::string>("sslCertificateChain", ""))
 {
-
-  // for (size_t ip = 0; ip < planes.size(); ++ip) {
-  //   avgs.push_back(p.get<vector<float>>("avgs_" + planes[ip]));
-  //   devs.push_back(p.get<vector<float>>("devs_" + planes[ip]));
-  // }
 
   if (filterDecoder) { produces<vector<FeatureVector<1>>>("filter"); }
   //
@@ -261,10 +264,7 @@ void NuGraphInferenceSonicTriton::produce(art::Event& e)
   }
 
   //Here the input should be sent to Triton
-  std::string fTritonModelName = "nugraph2";
-  std::string fTritonURL = inference_url;
   bool fTritonVerbose = false;
-  bool fTritonSSL = inference_ssl;
   std::string fTritonModelVersion = "";
   unsigned fTritonTimeout = 0;
   unsigned fTritonAllowedTries = 1;
@@ -272,10 +272,13 @@ void NuGraphInferenceSonicTriton::produce(art::Event& e)
 
   // ... Create parameter set for Triton inference client
   fhicl::ParameterSet TritonPset;
-  TritonPset.put("serverURL", fTritonURL);
+  TritonPset.put("serverURL", inference_url);
   TritonPset.put("verbose", fTritonVerbose);
-  TritonPset.put("ssl", fTritonSSL);
-  TritonPset.put("modelName", fTritonModelName);
+  TritonPset.put("ssl", inference_ssl);
+  TritonPset.put("sslRootCertificates", ssl_root_certificates);
+  TritonPset.put("sslPrivateKey", ssl_private_key);
+  TritonPset.put("sslCertificateChain", ssl_certificate_chain);
+  TritonPset.put("modelName", inference_model_name);
   TritonPset.put("modelVersion", fTritonModelVersion);
   TritonPset.put("timeout", fTritonTimeout);
   TritonPset.put("allowedTries", fTritonAllowedTries);

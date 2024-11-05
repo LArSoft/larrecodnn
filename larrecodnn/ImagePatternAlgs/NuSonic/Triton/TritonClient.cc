@@ -26,7 +26,10 @@ namespace lartriton {
     : allowedTries_(params.get<unsigned>("allowedTries", 0))
     , serverURL_(params.get<std::string>("serverURL"))
     , verbose_(params.get<bool>("verbose"))
-    , ssl_(params.get<bool>("ssl"))
+    , ssl_(params.get<bool>("ssl", false))
+    , sslRootCertificates_(params.get<std::string>("sslRootCertificates", ""))
+    , sslPrivateKey_(params.get<std::string>("sslPrivateKey", ""))
+    , sslCertificateChain_(params.get<std::string>("sslCertificateChain", ""))
     , options_(params.get<std::string>("modelName"))
   {
     //get appropriate server for this model
@@ -34,26 +37,18 @@ namespace lartriton {
 
     //connect to the server
     if (ssl_) {
-      std::string root_certificates;
-      std::string private_key;
-      std::string certificate_chain;
       nic::SslOptions ssl_options = nic::SslOptions();
-      ssl_options.root_certificates = root_certificates;
-      ssl_options.private_key = private_key;
-      ssl_options.certificate_chain = certificate_chain;
-      bool use_cached_channel = true;
-      triton_utils::throwIfError(nic::InferenceServerGrpcClient::Create(&client_,
-                                                                        serverURL_,
-                                                                        verbose_,
-                                                                        ssl_,
-                                                                        ssl_options,
-                                                                        nic::KeepAliveOptions(),
-                                                                        use_cached_channel),
-                                 "TritonClient(): unable to create inference context");
+      ssl_options.root_certificates = sslRootCertificates_;
+      ssl_options.private_key = sslPrivateKey_;
+      ssl_options.certificate_chain = sslCertificateChain_;
+      triton_utils::throwIfError(
+        nic::InferenceServerGrpcClient::Create(
+          &client_, serverURL_, verbose_, true, ssl_options, nic::KeepAliveOptions(), true),
+        "TritonClient(): unable to create inference context");
     }
     else {
       triton_utils::throwIfError(
-        nic::InferenceServerGrpcClient::Create(&client_, serverURL_, verbose_, ssl_),
+        nic::InferenceServerGrpcClient::Create(&client_, serverURL_, verbose_, false),
         "TritonClient(): unable to create inference context");
     }
 

@@ -129,8 +129,11 @@ private:
   bool semanticDecoder;
   bool vertexDecoder;
   std::string inference_url;
-  bool inference_ssl;
   std::string inference_model_name;
+  bool inference_ssl;
+  std::string ssl_root_certificates;
+  std::string ssl_private_key;
+  std::string ssl_certificate_chain;
 };
 
 NuGraphInferenceTriton::NuGraphInferenceTriton(fhicl::ParameterSet const& p)
@@ -144,14 +147,12 @@ NuGraphInferenceTriton::NuGraphInferenceTriton(fhicl::ParameterSet const& p)
   , semanticDecoder(p.get<bool>("semanticDecoder"))
   , vertexDecoder(p.get<bool>("vertexDecoder"))
   , inference_url(p.get<std::string>("url"))
-  , inference_ssl(p.get<bool>("ssl"))
   , inference_model_name(p.get<std::string>("modelName"))
+  , inference_ssl(p.get<bool>("ssl"))
+  , ssl_root_certificates(p.get<std::string>("sslRootCertificates", ""))
+  , ssl_private_key(p.get<std::string>("sslPrivateKey", ""))
+  , ssl_certificate_chain(p.get<std::string>("sslCertificateChain", ""))
 {
-
-  // for (size_t ip = 0; ip < planes.size(); ++ip) {
-  //   avgs.push_back(p.get<vector<float>>("avgs_" + planes[ip]));
-  //   devs.push_back(p.get<vector<float>>("devs_" + planes[ip]));
-  // }
 
   if (filterDecoder) { produces<vector<FeatureVector<1>>>("filter"); }
   //
@@ -261,9 +262,6 @@ void NuGraphInferenceTriton::produce(art::Event& e)
   tc::Headers http_headers;
   uint32_t client_timeout = 0;
   bool use_ssl = inference_ssl;
-  std::string root_certificates;
-  std::string private_key;
-  std::string certificate_chain;
   grpc_compression_algorithm compression_algorithm = grpc_compression_algorithm::GRPC_COMPRESS_NONE;
   bool test_use_cached_channel = false;
   bool use_cached_channel = true;
@@ -278,9 +276,9 @@ void NuGraphInferenceTriton::produce(art::Event& e)
   tc::SslOptions ssl_options = tc::SslOptions();
   std::string err;
   if (use_ssl) {
-    ssl_options.root_certificates = root_certificates;
-    ssl_options.private_key = private_key;
-    ssl_options.certificate_chain = certificate_chain;
+    ssl_options.root_certificates = ssl_root_certificates;
+    ssl_options.private_key = ssl_private_key;
+    ssl_options.certificate_chain = ssl_certificate_chain;
     err = "unable to create secure grpc client";
   }
   else {

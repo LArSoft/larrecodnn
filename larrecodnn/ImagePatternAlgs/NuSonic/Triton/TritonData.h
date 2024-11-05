@@ -46,8 +46,6 @@ namespace lartriton {
     bool setShape(unsigned loc, int64_t val) { return setShape(loc, val, true); }
 
     //io accessors
-    //**this was moved here from TritonData.cc with minor modifications to get it to work
-    //with NuGraph, pls see the .cc code for unmodified version**
     template <typename DT>
     void toServer(std::shared_ptr<TritonInput<DT>> ptr)
     {

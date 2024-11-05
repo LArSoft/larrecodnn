@@ -150,17 +150,6 @@ void NuGraphInference::produce(art::Event& e)
     if (vertexDecoder) { e.put(std::move(vertcol), "vertex"); }
     return;
   }
-  //added if condition for event id 387(54th record) which was getting stuck because
-  // delaunator operation  wasn't running
-  if (e.id().event() == 387) {
-    if (filterDecoder) { e.put(std::move(filtcol), "filter"); }
-    if (semanticDecoder) {
-      e.put(std::move(semtcol), "semantic");
-      e.put(std::move(semtdes), "semantic");
-    }
-    if (vertexDecoder) { e.put(std::move(vertcol), "vertex"); }
-    return;
-  }
 
   vector<vector<float>> nodeft_bare(planes.size(), vector<float>());
   vector<vector<float>> nodeft(planes.size(), vector<float>());
@@ -368,10 +357,12 @@ void NuGraphInference::produce(art::Event& e)
   auto outputs = model.forward(inputs).toGenericDict();
   auto end = std::chrono::high_resolution_clock::now();
   std::chrono::duration<double> elapsed = end - start;
-  std::cout << "Time taken for inference: "
-            << elapsed_preprocess1.count() + elapsed_preprocess2.count() + elapsed.count()
-            << " seconds" << std::endl;
-  if (debug) std::cout << "output =" << outputs << std::endl;
+  if (debug) {
+    std::cout << "Time taken for inference: "
+              << elapsed_preprocess1.count() + elapsed_preprocess2.count() + elapsed.count()
+              << " seconds" << std::endl;
+    std::cout << "output =" << outputs << std::endl;
+  }
   if (semanticDecoder) {
     for (size_t p = 0; p < planes.size(); p++) {
       torch::Tensor s = outputs.at("x_semantic").toGenericDict().at(planes[p]).toTensor();
