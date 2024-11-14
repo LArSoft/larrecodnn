@@ -59,7 +59,6 @@ namespace lartriton {
       }
 
       //shape must be specified for variable dims or if batch size changes
-      //**this line doesn't seem to be necessary in this version of the code, see TODO below**
       data_->SetShape(fullShape_);
 
       if (byteSize_ != sizeof(DT))
@@ -70,10 +69,6 @@ namespace lartriton {
       for (unsigned i0 = 0; i0 < batchSize_; ++i0) {
         const DT* arr = data_in[i0].data();
         triton_utils::throwIfError(
-          //**TODO: Currently, we assume each i0'th entry is 1-Dimensional, i.e. already pre-flattened
-          //if not 1-D. May be possible to remove this assumption by using SetShape and sizeShape to
-          //accommodate any input data shape, which seems to have been the original intention. See
-          //TritonData.cc for the original version of toServer**
           data_->AppendRaw(reinterpret_cast<const uint8_t*>(arr), data_in[i0].size() * byteSize_),
           name_ + " input(): unable to set data for batch entry " + std::to_string(i0));
       }

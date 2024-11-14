@@ -331,60 +331,70 @@ void NuGraphInferenceSonicTriton::produce(art::Event& e)
       for (size_t i = 0; i < hit_table_hit_id_data.size(); ++i) {
         hit_table_hit_id.push_back(hit_table_hit_id_data[i]);
       }
+      triton_input.setShape({static_cast<long int>(hit_table_hit_id_data.size())});
       triton_input.toServer(hit_table_hit_id_ptr);
     }
     else if (key == "hit_table_local_plane") {
       for (size_t i = 0; i < hit_table_local_plane_data.size(); ++i) {
         hit_table_local_plane.push_back(hit_table_local_plane_data[i]);
       }
+      triton_input.setShape({static_cast<long int>(hit_table_local_plane_data.size())});
       triton_input.toServer(hit_table_local_plane_ptr);
     }
     else if (key == "hit_table_local_time") {
       for (size_t i = 0; i < hit_table_local_time_data.size(); ++i) {
         hit_table_local_time.push_back(hit_table_local_time_data[i]);
       }
+      triton_input.setShape({static_cast<long int>(hit_table_local_time_data.size())});
       triton_input.toServer(hit_table_local_time_ptr);
     }
     else if (key == "hit_table_local_wire") {
       for (size_t i = 0; i < hit_table_local_wire_data.size(); ++i) {
         hit_table_local_wire.push_back(hit_table_local_wire_data[i]);
       }
+      triton_input.setShape({static_cast<long int>(hit_table_local_wire_data.size())});
       triton_input.toServer(hit_table_local_wire_ptr);
     }
     else if (key == "hit_table_integral") {
       for (size_t i = 0; i < hit_table_integral_data.size(); ++i) {
         hit_table_integral.push_back(hit_table_integral_data[i]);
       }
+      triton_input.setShape({static_cast<long int>(hit_table_integral_data.size())});
       triton_input.toServer(hit_table_integral_ptr);
     }
     else if (key == "hit_table_rms") {
       for (size_t i = 0; i < hit_table_rms_data.size(); ++i) {
         hit_table_rms.push_back(hit_table_rms_data[i]);
       }
+      triton_input.setShape({static_cast<long int>(hit_table_rms_data.size())});
       triton_input.toServer(hit_table_rms_ptr);
     }
     else if (key == "spacepoint_table_spacepoint_id") {
       for (size_t i = 0; i < spacepoint_table_spacepoint_id_data.size(); ++i) {
         spacepoint_table_spacepoint_id.push_back(spacepoint_table_spacepoint_id_data[i]);
       }
+      triton_input.setShape({static_cast<long int>(spacepoint_table_spacepoint_id_data.size())});
       triton_input.toServer(spacepoint_table_spacepoint_id_ptr);
     }
     else if (key == "spacepoint_table_hit_id_u") {
       for (size_t i = 0; i < spacepoint_table_hit_id_u_data.size(); ++i) {
         spacepoint_table_hit_id_u.push_back(spacepoint_table_hit_id_u_data[i]);
       }
+      triton_input.setShape({static_cast<long int>(spacepoint_table_hit_id_u_data.size())});
       triton_input.toServer(spacepoint_table_hit_id_u_ptr);
     }
     else if (key == "spacepoint_table_hit_id_v") {
       for (size_t i = 0; i < spacepoint_table_hit_id_v_data.size(); ++i) {
         spacepoint_table_hit_id_v.push_back(spacepoint_table_hit_id_v_data[i]);
       }
+      triton_input.setShape({static_cast<long int>(spacepoint_table_hit_id_v_data.size())});
       triton_input.toServer(spacepoint_table_hit_id_v_ptr);
     }
     else if (key == "spacepoint_table_hit_id_y") {
       for (size_t i = 0; i < spacepoint_table_hit_id_y_data.size(); ++i) {
         spacepoint_table_hit_id_y.push_back(spacepoint_table_hit_id_y_data[i]);
       }
+      triton_input.setShape({static_cast<long int>(spacepoint_table_hit_id_y_data.size())});
       triton_input.toServer(spacepoint_table_hit_id_y_ptr);
     }
   }
