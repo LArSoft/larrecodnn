@@ -26,15 +26,31 @@ namespace lartriton {
     : allowedTries_(params.get<unsigned>("allowedTries", 0))
     , serverURL_(params.get<std::string>("serverURL"))
     , verbose_(params.get<bool>("verbose"))
+    , ssl_(params.get<bool>("ssl", false))
+    , sslRootCertificates_(params.get<std::string>("sslRootCertificates", ""))
+    , sslPrivateKey_(params.get<std::string>("sslPrivateKey", ""))
+    , sslCertificateChain_(params.get<std::string>("sslCertificateChain", ""))
     , options_(params.get<std::string>("modelName"))
   {
     //get appropriate server for this model
     if (verbose_) MF_LOG_INFO("TritonClient") << "Using server: " << serverURL_;
 
     //connect to the server
-    //TODO: add SSL options
-    triton_utils::throwIfError(nic::InferenceServerGrpcClient::Create(&client_, serverURL_, false),
-                               "TritonClient(): unable to create inference context");
+    if (ssl_) {
+      nic::SslOptions ssl_options = nic::SslOptions();
+      ssl_options.root_certificates = sslRootCertificates_;
+      ssl_options.private_key = sslPrivateKey_;
+      ssl_options.certificate_chain = sslCertificateChain_;
+      triton_utils::throwIfError(
+        nic::InferenceServerGrpcClient::Create(
+          &client_, serverURL_, verbose_, true, ssl_options, nic::KeepAliveOptions(), true),
+        "TritonClient(): unable to create inference context");
+    }
+    else {
+      triton_utils::throwIfError(
+        nic::InferenceServerGrpcClient::Create(&client_, serverURL_, verbose_, false),
+        "TritonClient(): unable to create inference context");
+    }
 
     //set options
     options_.model_version_ = params.get<std::string>("modelVersion");
@@ -205,9 +221,15 @@ namespace lartriton {
     //blocking call
     auto t1 = std::chrono::steady_clock::now();
     nic::InferResult* results;
-    bool status =
-      triton_utils::warnIfError(client_->Infer(&results, options_, inputsTriton_, outputsTriton_),
-                                "evaluate(): unable to run and/or get result");
+
+    nic::Headers http_headers;
+    grpc_compression_algorithm compression_algorithm =
+      grpc_compression_algorithm::GRPC_COMPRESS_NONE;
+
+    bool status = triton_utils::warnIfError(
+      client_->Infer(
+        &results, options_, inputsTriton_, outputsTriton_, http_headers, compression_algorithm),
+      "evaluate(): unable to run and/or get result");
     if (!status) {
       finish(false);
       return;

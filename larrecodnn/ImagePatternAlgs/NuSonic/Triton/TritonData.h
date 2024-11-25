@@ -1,7 +1,9 @@
 #ifndef NuSonic_Triton_TritonData
 #define NuSonic_Triton_TritonData
 
+#include "cetlib_except/exception.h"
 #include "larrecodnn/ImagePatternAlgs/NuSonic/Triton/Span.h"
+#include "larrecodnn/ImagePatternAlgs/NuSonic/Triton/triton_utils.h"
 
 #include <algorithm>
 #include <any>
@@ -45,7 +47,36 @@ namespace lartriton {
 
     //io accessors
     template <typename DT>
-    void toServer(std::shared_ptr<TritonInput<DT>> ptr);
+    void toServer(std::shared_ptr<TritonInput<DT>> ptr)
+    {
+      const auto& data_in = *ptr;
+
+      //check batch size
+      if (data_in.size() != batchSize_) {
+        throw cet::exception("TritonDataError")
+          << name_ << " input(): input vector has size " << data_in.size()
+          << " but specified batch size is " << batchSize_;
+      }
+
+      //shape must be specified for variable dims or if batch size changes
+      data_->SetShape(fullShape_);
+
+      if (byteSize_ != sizeof(DT))
+        throw cet::exception("TritonDataError")
+          << name_ << " input(): inconsistent byte size " << sizeof(DT) << " (should be "
+          << byteSize_ << " for " << dname_ << ")";
+
+      for (unsigned i0 = 0; i0 < batchSize_; ++i0) {
+        const DT* arr = data_in[i0].data();
+        triton_utils::throwIfError(
+          data_->AppendRaw(reinterpret_cast<const uint8_t*>(arr), data_in[i0].size() * byteSize_),
+          name_ + " input(): unable to set data for batch entry " + std::to_string(i0));
+      }
+
+      //keep input data in scope
+      holder_ = std::move(ptr);
+    }
+
     template <typename DT>
     TritonOutput<DT> fromServer() const;
 
