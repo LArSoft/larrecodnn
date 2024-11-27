@@ -42,8 +42,6 @@
 #include <torch/torch.h>
 #include <vector>
 
-#include "grpc_client.h"
-
 class NuGraphInferenceSonicTriton;
 
 using anab::FeatureVector;
@@ -53,23 +51,7 @@ using recob::SpacePoint;
 using std::array;
 using std::vector;
 
-#define FAIL_IF_ERR(X, MSG)                                                                        \
-  {                                                                                                \
-    tc::Error err = (X);                                                                           \
-    if (!err.IsOk()) {                                                                             \
-      std::cerr << "error: " << (MSG) << ": " << err << std::endl;                                 \
-      exit(1);                                                                                     \
-    }                                                                                              \
-  }
-namespace tc = triton::client;
-
 namespace {
-
-  template <typename T, typename A>
-  int arg_max(std::vector<T, A> const& vec)
-  {
-    return static_cast<int>(std::distance(vec.begin(), max_element(vec.begin(), vec.end())));
-  }
 
   template <typename T, size_t N>
   void softmax(std::array<T, N>& arr)
@@ -88,15 +70,6 @@ namespace {
     }
     return;
   }
-}
-
-// Function to convert string to integer
-int stoi(const std::string& str)
-{
-  std::istringstream iss(str);
-  int num;
-  iss >> num;
-  return num;
 }
 
 // Function to print elements of a vector<float>
@@ -130,17 +103,17 @@ private:
   art::InputTag spsInput;
   size_t minHits;
   bool debug;
-  // vector<vector<float>> avgs;
-  // vector<vector<float>> devs;
   bool filterDecoder;
   bool semanticDecoder;
   bool vertexDecoder;
-  std::string inference_url;
-  std::string inference_model_name;
-  bool inference_ssl;
-  std::string ssl_root_certificates;
-  std::string ssl_private_key;
-  std::string ssl_certificate_chain;
+  fhicl::ParameterSet tritonPset;
+  std::unique_ptr<lartriton::TritonClient> triton_client;
+
+  template<class T> void setShapeAndToServer(lartriton::TritonData<triton::client::InferInput>& triton_input, vector<T>& vec, size_t batchSize) {
+    triton_input.setShape({static_cast<long int>(vec.size())});
+    triton_input.toServer( std::make_shared<lartriton::TritonInput<T>>(lartriton::TritonInput<T>(batchSize,vec))  );
+  }
+
 };
 
 NuGraphInferenceSonicTriton::NuGraphInferenceSonicTriton(fhicl::ParameterSet const& p)
@@ -153,13 +126,12 @@ NuGraphInferenceSonicTriton::NuGraphInferenceSonicTriton(fhicl::ParameterSet con
   , filterDecoder(p.get<bool>("filterDecoder"))
   , semanticDecoder(p.get<bool>("semanticDecoder"))
   , vertexDecoder(p.get<bool>("vertexDecoder"))
-  , inference_url(p.get<std::string>("url"))
-  , inference_model_name(p.get<std::string>("modelName"))
-  , inference_ssl(p.get<bool>("ssl"))
-  , ssl_root_certificates(p.get<std::string>("sslRootCertificates", ""))
-  , ssl_private_key(p.get<std::string>("sslPrivateKey", ""))
-  , ssl_certificate_chain(p.get<std::string>("sslCertificateChain", ""))
+  , tritonPset(p.get<fhicl::ParameterSet>("TritonConfig"))
 {
+
+  // ... Create the Triton inference client
+  if (debug) std::cout << "TritonConfig: " << tritonPset.to_string() << std::endl;
+  triton_client = std::make_unique<lartriton::TritonClient>(tritonPset);
 
   if (filterDecoder) { produces<vector<FeatureVector<1>>>("filter"); }
   //
@@ -174,56 +146,29 @@ NuGraphInferenceSonicTriton::NuGraphInferenceSonicTriton(fhicl::ParameterSet con
 void NuGraphInferenceSonicTriton::produce(art::Event& e)
 {
 
-  art::Handle<vector<Hit>> hitListHandle;
-  vector<art::Ptr<Hit>> hitlist;
-  if (e.getByLabel(hitInput, hitListHandle)) { art::fill_ptr_vector(hitlist, hitListHandle); }
-
-  std::unique_ptr<vector<FeatureVector<1>>> filtcol(
-    new vector<FeatureVector<1>>(hitlist.size(), FeatureVector<1>(std::array<float, 1>({-1.}))));
-
-  std::unique_ptr<vector<FeatureVector<5>>> semtcol(new vector<FeatureVector<5>>(
-    hitlist.size(), FeatureVector<5>(std::array<float, 5>({-1., -1., -1., -1., -1.}))));
-  std::unique_ptr<MVADescription<5>> semtdes(
-    new MVADescription<5>(hitListHandle.provenance()->moduleLabel(),
-                          "semantic",
-                          {"MIP", "HIP", "shower", "michel", "diffuse"}));
-
-  std::unique_ptr<vector<recob::Vertex>> vertcol(new vector<recob::Vertex>());
-
-  if (debug) std::cout << "Hits size=" << hitlist.size() << std::endl;
-  if (hitlist.size() < minHits) {
-    if (filterDecoder) { e.put(std::move(filtcol), "filter"); }
-    if (semanticDecoder) {
-      e.put(std::move(semtcol), "semantic");
-      e.put(std::move(semtdes), "semantic");
-    }
-    if (vertexDecoder) { e.put(std::move(vertcol), "vertex"); }
-    return;
-  }
-  vector<vector<size_t>> idsmap(planes.size(), vector<size_t>());
-  vector<size_t> idsmapRev(hitlist.size(), hitlist.size());
-  for (auto h : hitlist) {
-    idsmap[h->View()].push_back(h.key());
-    idsmapRev[h.key()] = idsmap[h->View()].size() - 1;
-  }
-
-  // event id
-  int run = e.id().run();
-  int subrun = e.id().subRun();
-  int event = e.id().event();
-
-  array<int, 3> evtID;
-  evtID[0] = run;
-  evtID[1] = subrun;
-  evtID[2] = event;
-
-  // hit table
+  // Graph inputs
   vector<int32_t> hit_table_hit_id_data;
   vector<int32_t> hit_table_local_plane_data;
   vector<float> hit_table_local_time_data;
   vector<int32_t> hit_table_local_wire_data;
   vector<float> hit_table_integral_data;
   vector<float> hit_table_rms_data;
+  vector<int32_t> spacepoint_table_spacepoint_id_data;
+  vector<int32_t> spacepoint_table_hit_id_u_data;
+  vector<int32_t> spacepoint_table_hit_id_v_data;
+  vector<int32_t> spacepoint_table_hit_id_y_data;
+
+  //////
+  art::Handle<vector<Hit>> hitListHandle;
+  vector<art::Ptr<Hit>> hitlist;
+  if (e.getByLabel(hitInput, hitListHandle)) { art::fill_ptr_vector(hitlist, hitListHandle); }
+
+  vector<vector<size_t>> idsmap(planes.size(), vector<size_t>());
+  for (auto h : hitlist) {
+    idsmap[h->View()].push_back(h.key());
+  }
+
+  // hit table
   for (auto h : hitlist) {
     hit_table_hit_id_data.push_back(h.key());
     hit_table_local_plane_data.push_back(h->View());
@@ -247,10 +192,6 @@ void NuGraphInferenceSonicTriton::produce(art::Event& e)
   }
 
   // space point table
-  vector<int32_t> spacepoint_table_spacepoint_id_data;
-  vector<int32_t> spacepoint_table_hit_id_u_data;
-  vector<int32_t> spacepoint_table_hit_id_v_data;
-  vector<int32_t> spacepoint_table_hit_id_y_data;
   for (size_t i = 0; i < splist.size(); ++i) {
     spacepoint_table_spacepoint_id_data.push_back(i);
     spacepoint_table_hit_id_u_data.push_back(-1);
@@ -262,65 +203,39 @@ void NuGraphInferenceSonicTriton::produce(art::Event& e)
       if (sp2Hit[i][j]->View() == 2) spacepoint_table_hit_id_y_data.back() = sp2Hit[i][j].key();
     }
   }
+  ///
+
+  std::unique_ptr<vector<FeatureVector<1>>> filtcol(
+    new vector<FeatureVector<1>>(hitlist.size(), FeatureVector<1>(std::array<float, 1>({-1.}))));
+
+  std::unique_ptr<vector<FeatureVector<5>>> semtcol(new vector<FeatureVector<5>>(
+    hitlist.size(), FeatureVector<5>(std::array<float, 5>({-1., -1., -1., -1., -1.}))));
+  std::unique_ptr<MVADescription<5>> semtdes(
+    new MVADescription<5>(hitListHandle.provenance()->moduleLabel(),
+                          "semantic",
+                          {"MIP", "HIP", "shower", "michel", "diffuse"}));
+
+  std::unique_ptr<vector<recob::Vertex>> vertcol(new vector<recob::Vertex>());
+
+  if (debug) std::cout << "Hits size=" << hitlist.size() << std::endl;
+  if (hitlist.size() < minHits) {
+    if (filterDecoder) { e.put(std::move(filtcol), "filter"); }
+    if (semanticDecoder) {
+      e.put(std::move(semtcol), "semantic");
+      e.put(std::move(semtdes), "semantic");
+    }
+    if (vertexDecoder) { e.put(std::move(vertcol), "vertex"); }
+    return;
+  }
+
+  // NuSonic Triton Server
+
+  auto start = std::chrono::high_resolution_clock::now();
 
   //Here the input should be sent to Triton
-  bool fTritonVerbose = false;
-  std::string fTritonModelVersion = "";
-  unsigned fTritonTimeout = 0;
-  unsigned fTritonAllowedTries = 1;
-  std::unique_ptr<lartriton::TritonClient> triton_client;
-
-  // ... Create parameter set for Triton inference client
-  fhicl::ParameterSet TritonPset;
-  TritonPset.put("serverURL", inference_url);
-  TritonPset.put("verbose", fTritonVerbose);
-  TritonPset.put("ssl", inference_ssl);
-  TritonPset.put("sslRootCertificates", ssl_root_certificates);
-  TritonPset.put("sslPrivateKey", ssl_private_key);
-  TritonPset.put("sslCertificateChain", ssl_certificate_chain);
-  TritonPset.put("modelName", inference_model_name);
-  TritonPset.put("modelVersion", fTritonModelVersion);
-  TritonPset.put("timeout", fTritonTimeout);
-  TritonPset.put("allowedTries", fTritonAllowedTries);
-  TritonPset.put("outputs", "[]");
-
-  // ... Create the Triton inference client
-  triton_client = std::make_unique<lartriton::TritonClient>(TritonPset);
-
-  triton_client->setBatchSize(1); // set batch size
-
-  auto hit_table_hit_id_ptr = std::make_shared<lartriton::TritonInput<int32_t>>();
-  auto hit_table_local_plane_ptr = std::make_shared<lartriton::TritonInput<int32_t>>();
-  auto hit_table_local_time_ptr = std::make_shared<lartriton::TritonInput<float>>();
-  auto hit_table_local_wire_ptr = std::make_shared<lartriton::TritonInput<int32_t>>();
-  auto hit_table_integral_ptr = std::make_shared<lartriton::TritonInput<float>>();
-  auto hit_table_rms_ptr = std::make_shared<lartriton::TritonInput<float>>();
-  auto spacepoint_table_spacepoint_id_ptr = std::make_shared<lartriton::TritonInput<int32_t>>();
-  auto spacepoint_table_hit_id_u_ptr = std::make_shared<lartriton::TritonInput<int32_t>>();
-  auto spacepoint_table_hit_id_v_ptr = std::make_shared<lartriton::TritonInput<int32_t>>();
-  auto spacepoint_table_hit_id_y_ptr = std::make_shared<lartriton::TritonInput<int32_t>>();
-
-  hit_table_hit_id_ptr->reserve(1);
-  hit_table_local_plane_ptr->reserve(1);
-  hit_table_local_time_ptr->reserve(1);
-  hit_table_local_wire_ptr->reserve(1);
-  hit_table_integral_ptr->reserve(1);
-  hit_table_rms_ptr->reserve(1);
-  spacepoint_table_spacepoint_id_ptr->reserve(1);
-  spacepoint_table_hit_id_u_ptr->reserve(1);
-  spacepoint_table_hit_id_v_ptr->reserve(1);
-  spacepoint_table_hit_id_y_ptr->reserve(1);
-
-  auto& hit_table_hit_id = hit_table_hit_id_ptr->emplace_back();
-  auto& hit_table_local_plane = hit_table_local_plane_ptr->emplace_back();
-  auto& hit_table_local_time = hit_table_local_time_ptr->emplace_back();
-  auto& hit_table_local_wire = hit_table_local_wire_ptr->emplace_back();
-  auto& hit_table_integral = hit_table_integral_ptr->emplace_back();
-  auto& hit_table_rms = hit_table_rms_ptr->emplace_back();
-  auto& spacepoint_table_spacepoint_id = spacepoint_table_spacepoint_id_ptr->emplace_back();
-  auto& spacepoint_table_hit_id_u = spacepoint_table_hit_id_u_ptr->emplace_back();
-  auto& spacepoint_table_hit_id_v = spacepoint_table_hit_id_v_ptr->emplace_back();
-  auto& spacepoint_table_hit_id_y = spacepoint_table_hit_id_y_ptr->emplace_back();
+  triton_client->reset();
+  size_t batchSize = 1;//the code below assumes/has only been tested for batch size = 1
+  triton_client->setBatchSize(batchSize); // set batch size
 
   auto& inputs = triton_client->input();
   for (auto& input_pair : inputs) {
@@ -328,156 +243,87 @@ void NuGraphInferenceSonicTriton::produce(art::Event& e)
     auto& triton_input = input_pair.second;
 
     if (key == "hit_table_hit_id") {
-      for (size_t i = 0; i < hit_table_hit_id_data.size(); ++i) {
-        hit_table_hit_id.push_back(hit_table_hit_id_data[i]);
-      }
-      triton_input.setShape({static_cast<long int>(hit_table_hit_id_data.size())});
-      triton_input.toServer(hit_table_hit_id_ptr);
+      setShapeAndToServer(triton_input,hit_table_hit_id_data,batchSize);
     }
     else if (key == "hit_table_local_plane") {
-      for (size_t i = 0; i < hit_table_local_plane_data.size(); ++i) {
-        hit_table_local_plane.push_back(hit_table_local_plane_data[i]);
-      }
-      triton_input.setShape({static_cast<long int>(hit_table_local_plane_data.size())});
-      triton_input.toServer(hit_table_local_plane_ptr);
+      setShapeAndToServer(triton_input,hit_table_local_plane_data,batchSize);
     }
     else if (key == "hit_table_local_time") {
-      for (size_t i = 0; i < hit_table_local_time_data.size(); ++i) {
-        hit_table_local_time.push_back(hit_table_local_time_data[i]);
-      }
-      triton_input.setShape({static_cast<long int>(hit_table_local_time_data.size())});
-      triton_input.toServer(hit_table_local_time_ptr);
+      setShapeAndToServer(triton_input,hit_table_local_time_data,batchSize);
     }
     else if (key == "hit_table_local_wire") {
-      for (size_t i = 0; i < hit_table_local_wire_data.size(); ++i) {
-        hit_table_local_wire.push_back(hit_table_local_wire_data[i]);
-      }
-      triton_input.setShape({static_cast<long int>(hit_table_local_wire_data.size())});
-      triton_input.toServer(hit_table_local_wire_ptr);
+      setShapeAndToServer(triton_input,hit_table_local_wire_data,batchSize);
     }
     else if (key == "hit_table_integral") {
-      for (size_t i = 0; i < hit_table_integral_data.size(); ++i) {
-        hit_table_integral.push_back(hit_table_integral_data[i]);
-      }
-      triton_input.setShape({static_cast<long int>(hit_table_integral_data.size())});
-      triton_input.toServer(hit_table_integral_ptr);
+      setShapeAndToServer(triton_input,hit_table_integral_data,batchSize);
     }
     else if (key == "hit_table_rms") {
-      for (size_t i = 0; i < hit_table_rms_data.size(); ++i) {
-        hit_table_rms.push_back(hit_table_rms_data[i]);
-      }
-      triton_input.setShape({static_cast<long int>(hit_table_rms_data.size())});
-      triton_input.toServer(hit_table_rms_ptr);
+      setShapeAndToServer(triton_input,hit_table_rms_data,batchSize);
     }
     else if (key == "spacepoint_table_spacepoint_id") {
-      for (size_t i = 0; i < spacepoint_table_spacepoint_id_data.size(); ++i) {
-        spacepoint_table_spacepoint_id.push_back(spacepoint_table_spacepoint_id_data[i]);
-      }
-      triton_input.setShape({static_cast<long int>(spacepoint_table_spacepoint_id_data.size())});
-      triton_input.toServer(spacepoint_table_spacepoint_id_ptr);
+      setShapeAndToServer(triton_input,spacepoint_table_spacepoint_id_data,batchSize);
     }
     else if (key == "spacepoint_table_hit_id_u") {
-      for (size_t i = 0; i < spacepoint_table_hit_id_u_data.size(); ++i) {
-        spacepoint_table_hit_id_u.push_back(spacepoint_table_hit_id_u_data[i]);
-      }
-      triton_input.setShape({static_cast<long int>(spacepoint_table_hit_id_u_data.size())});
-      triton_input.toServer(spacepoint_table_hit_id_u_ptr);
+      setShapeAndToServer(triton_input,spacepoint_table_hit_id_u_data,batchSize);
     }
     else if (key == "spacepoint_table_hit_id_v") {
-      for (size_t i = 0; i < spacepoint_table_hit_id_v_data.size(); ++i) {
-        spacepoint_table_hit_id_v.push_back(spacepoint_table_hit_id_v_data[i]);
-      }
-      triton_input.setShape({static_cast<long int>(spacepoint_table_hit_id_v_data.size())});
-      triton_input.toServer(spacepoint_table_hit_id_v_ptr);
+      setShapeAndToServer(triton_input,spacepoint_table_hit_id_v_data,batchSize);
     }
     else if (key == "spacepoint_table_hit_id_y") {
-      for (size_t i = 0; i < spacepoint_table_hit_id_y_data.size(); ++i) {
-        spacepoint_table_hit_id_y.push_back(spacepoint_table_hit_id_y_data[i]);
-      }
-      triton_input.setShape({static_cast<long int>(spacepoint_table_hit_id_y_data.size())});
-      triton_input.toServer(spacepoint_table_hit_id_y_ptr);
+      setShapeAndToServer(triton_input,spacepoint_table_hit_id_y_data,batchSize);
+    }
+    else {
+      throw std::runtime_error(std::string("Error -- key " + key + " not supported!"));
     }
   }
 
-  auto start = std::chrono::high_resolution_clock::now();
   // ~~~~ Send inference request
   triton_client->dispatch();
+  // ~~~~ Retrieve inference results
+  auto& infer_result = triton_client->output();
   auto end = std::chrono::high_resolution_clock::now();
   std::chrono::duration<double> elapsed = end - start;
   std::cout << "Time taken for inference: " << elapsed.count() << " seconds" << std::endl;
 
-  // ~~~~ Retrieve inference results
-  const auto& triton_output0 = triton_client->output().at("x_semantic_u");
-  const auto& prob0 = triton_output0.fromServer<float>();
-  size_t triton_input0_elements = std::distance(prob0[0].begin(), prob0[0].end());
+  // Writing the outputs to the output root file
 
-  const auto& triton_output1 = triton_client->output().at("x_semantic_v");
-  const auto& prob1 = triton_output1.fromServer<float>();
-  size_t triton_input1_elements = std::distance(prob1[0].begin(), prob1[0].end());
-
-  const auto& triton_output2 = triton_client->output().at("x_semantic_y");
-  const auto& prob2 = triton_output2.fromServer<float>();
-  size_t triton_input2_elements = std::distance(prob2[0].begin(), prob2[0].end());
-
-  const auto& triton_output3 = triton_client->output().at("x_filter_u");
-  const auto& prob3 = triton_output3.fromServer<float>();
-  size_t triton_input3_elements = std::distance(prob3[0].begin(), prob3[0].end());
-
-  const auto& triton_output4 = triton_client->output().at("x_filter_v");
-  const auto& prob4 = triton_output4.fromServer<float>();
-  size_t triton_input4_elements = std::distance(prob4[0].begin(), prob4[0].end());
-
-  const auto& triton_output5 = triton_client->output().at("x_filter_y");
-  const auto& prob5 = triton_output5.fromServer<float>();
-  size_t triton_input5_elements = std::distance(prob5[0].begin(), prob5[0].end());
-
-  // putting in the resp output vectors
-  std::vector<float> x_semantic_u_data;
-  x_semantic_u_data.reserve(triton_input0_elements);
-  x_semantic_u_data.insert(x_semantic_u_data.end(), prob0[0].begin(), prob0[0].end());
-
-  std::vector<float> x_semantic_v_data;
-  x_semantic_v_data.reserve(triton_input1_elements);
-  x_semantic_v_data.insert(x_semantic_v_data.end(), prob1[0].begin(), prob1[0].end());
-
-  std::vector<float> x_semantic_y_data;
-  x_semantic_y_data.reserve(triton_input2_elements);
-  x_semantic_y_data.insert(x_semantic_y_data.end(), prob2[0].begin(), prob2[0].end());
-
-  std::vector<float> x_filter_u_data;
-  x_filter_u_data.reserve(triton_input3_elements);
-  x_filter_u_data.insert(x_filter_u_data.end(), prob3[0].begin(), prob3[0].end());
-
-  std::vector<float> x_filter_v_data;
-  x_filter_v_data.reserve(triton_input4_elements);
-  x_filter_v_data.insert(x_filter_v_data.end(), prob4[0].begin(), prob4[0].end());
-
-  std::vector<float> x_filter_y_data;
-  x_filter_y_data.reserve(triton_input5_elements);
-  x_filter_y_data.insert(x_filter_y_data.end(), prob5[0].begin(), prob5[0].end());
-
-  std::cout << "Triton Input: " << std::endl;
-
-  std::cout << "x_semantic_u: " << std::endl;
-  printVector(x_semantic_u_data);
-
-  std::cout << "x_semantic_v: " << std::endl;
-  printVector(x_semantic_v_data);
-
-  std::cout << "x_semantic_y: " << std::endl;
-  printVector(x_semantic_y_data);
-
-  std::cout << "x_filter_u: " << std::endl;
-  printVector(x_filter_u_data);
-
-  std::cout << "x_filter_v: " << std::endl;
-  printVector(x_filter_v_data);
-
-  std::cout << "x_filter_y: " << std::endl;
-  printVector(x_filter_y_data);
-
-  // writing the outputs to the output root file
   if (semanticDecoder) {
+
+    const auto& triton_output0 = infer_result.at("x_semantic_u");
+    const auto& prob0 = triton_output0.fromServer<float>();
+    size_t triton_input0_elements = std::distance(prob0[0].begin(), prob0[0].end());
+
+    const auto& triton_output1 = infer_result.at("x_semantic_v");
+    const auto& prob1 = triton_output1.fromServer<float>();
+    size_t triton_input1_elements = std::distance(prob1[0].begin(), prob1[0].end());
+
+    const auto& triton_output2 = infer_result.at("x_semantic_y");
+    const auto& prob2 = triton_output2.fromServer<float>();
+    size_t triton_input2_elements = std::distance(prob2[0].begin(), prob2[0].end());
+
+    std::vector<float> x_semantic_u_data;
+    x_semantic_u_data.reserve(triton_input0_elements);
+    x_semantic_u_data.insert(x_semantic_u_data.end(), prob0[0].begin(), prob0[0].end());
+
+    std::vector<float> x_semantic_v_data;
+    x_semantic_v_data.reserve(triton_input1_elements);
+    x_semantic_v_data.insert(x_semantic_v_data.end(), prob1[0].begin(), prob1[0].end());
+
+    std::vector<float> x_semantic_y_data;
+    x_semantic_y_data.reserve(triton_input2_elements);
+    x_semantic_y_data.insert(x_semantic_y_data.end(), prob2[0].begin(), prob2[0].end());
+
+    if (debug) {
+      std::cout << "x_semantic_u: " << std::endl;
+      printVector(x_semantic_u_data);
+
+      std::cout << "x_semantic_v: " << std::endl;
+      printVector(x_semantic_v_data);
+
+      std::cout << "x_semantic_y: " << std::endl;
+      printVector(x_semantic_y_data);
+    }
+
     size_t n_cols = 5;
     for (size_t p = 0; p < planes.size(); p++) {
       torch::Tensor s;
@@ -516,8 +362,47 @@ void NuGraphInferenceSonicTriton::produce(art::Event& e)
         (*semtcol)[idx] = semt;
       }
     }
+    e.put(std::move(semtcol), "semantic");
+    e.put(std::move(semtdes), "semantic");
   }
+
   if (filterDecoder) {
+
+    const auto& triton_output3 = infer_result.at("x_filter_u");
+    const auto& prob3 = triton_output3.fromServer<float>();
+    size_t triton_input3_elements = std::distance(prob3[0].begin(), prob3[0].end());
+
+    const auto& triton_output4 = infer_result.at("x_filter_v");
+    const auto& prob4 = triton_output4.fromServer<float>();
+    size_t triton_input4_elements = std::distance(prob4[0].begin(), prob4[0].end());
+
+    const auto& triton_output5 = infer_result.at("x_filter_y");
+    const auto& prob5 = triton_output5.fromServer<float>();
+    size_t triton_input5_elements = std::distance(prob5[0].begin(), prob5[0].end());
+
+    std::vector<float> x_filter_u_data;
+    x_filter_u_data.reserve(triton_input3_elements);
+    x_filter_u_data.insert(x_filter_u_data.end(), prob3[0].begin(), prob3[0].end());
+
+    std::vector<float> x_filter_v_data;
+    x_filter_v_data.reserve(triton_input4_elements);
+    x_filter_v_data.insert(x_filter_v_data.end(), prob4[0].begin(), prob4[0].end());
+
+    std::vector<float> x_filter_y_data;
+    x_filter_y_data.reserve(triton_input5_elements);
+    x_filter_y_data.insert(x_filter_y_data.end(), prob5[0].begin(), prob5[0].end());
+
+    if (debug) {
+      std::cout << "x_filter_u: " << std::endl;
+      printVector(x_filter_u_data);
+
+      std::cout << "x_filter_v: " << std::endl;
+      printVector(x_filter_v_data);
+
+      std::cout << "x_filter_y: " << std::endl;
+      printVector(x_filter_y_data);
+    }
+
     for (size_t p = 0; p < planes.size(); p++) {
       torch::Tensor f;
       torch::TensorOptions options = torch::TensorOptions().dtype(torch::kFloat32);
@@ -543,13 +428,9 @@ void NuGraphInferenceSonicTriton::produce(art::Event& e)
         (*filtcol)[idx] = FeatureVector<1>(input);
       }
     }
+    e.put(std::move(filtcol), "filter");
   }
 
-  if (filterDecoder) { e.put(std::move(filtcol), "filter"); }
-  if (semanticDecoder) {
-    e.put(std::move(semtcol), "semantic");
-    e.put(std::move(semtdes), "semantic");
-  }
   if (vertexDecoder) { e.put(std::move(vertcol), "vertex"); }
 }
 
