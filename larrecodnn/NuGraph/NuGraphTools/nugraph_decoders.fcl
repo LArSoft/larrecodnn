@@ -1,0 +1,21 @@
+BEGIN_PROLOG
+
+FilterDecoderTool: {
+    debug: false
+    planes: ["u", "v", "y"]
+    tool_type: "FilterDecoder"
+}
+
+SemanticDecoderTool: {
+    debug: false
+    planes: ["u", "v", "y"]
+    tool_type: "SemanticDecoder"
+}
+
+VertexDecoderTool: {
+    debug: false
+    outputDictElem: "x_vertex"
+    tool_type: "VertexDecoder"
+}
+
+END_PROLOG
