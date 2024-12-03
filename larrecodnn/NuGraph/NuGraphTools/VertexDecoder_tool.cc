@@ -41,14 +41,14 @@ public:
    *
    * @param art::Event event record
    */
-  void writeEmptyToEvent(art::Event& e, vector<vector<size_t> >& idsmap) override;
+  void writeEmptyToEvent(art::Event& e, const vector<vector<size_t> >& idsmap) override;
 
   /**
    * @brief Decoder function
    *
    * @param art::Event event record for decoder
    */
-  void writeToEvent(art::Event& e, vector<vector<size_t> >& idsmap, const lartriton::TritonOutputMap& infer_result) override;
+  void writeToEvent(art::Event& e, const vector<vector<size_t> >& idsmap, const vector<NuGraphOutput>& infer_output) override;
 
 private:
 
@@ -68,22 +68,26 @@ void VertexDecoder::configure(const fhicl::ParameterSet& p) {
 
 }
 
-void VertexDecoder::writeEmptyToEvent(art::Event& e, vector<vector<size_t> >& idsmap) {
+void VertexDecoder::writeEmptyToEvent(art::Event& e, const vector<vector<size_t> >& idsmap) {
   //
   std::unique_ptr<vector<recob::Vertex>> vertcol(new vector<recob::Vertex>());
   e.put(std::move(vertcol), "vertex");
   //
 }
 
-void VertexDecoder::writeToEvent(art::Event& e, vector<vector<size_t> >& idsmap, const lartriton::TritonOutputMap& infer_result) {
+void VertexDecoder::writeToEvent(art::Event& e, const vector<vector<size_t> >& idsmap, const vector<NuGraphOutput>& infer_output) {
   //
   std::unique_ptr<vector<recob::Vertex>> vertcol(new vector<recob::Vertex>());
-  const auto& v = infer_result.at(outputDictElem).fromServer<float>()[0];
-  if (v.size()==3) {
+
+  std::vector<float> x_vertex_data;
+  for (auto& io : infer_output) {
+    if (io.output_name == outputDictElem) x_vertex_data = io.output_vec;
+  }
+  if (x_vertex_data.size()==3) {
     double vpos[3];
-    vpos[0] = v[0];
-    vpos[1] = v[1];
-    vpos[2] = v[2];
+    vpos[0] = x_vertex_data[0];
+    vpos[1] = x_vertex_data[1];
+    vpos[2] = x_vertex_data[2];
     vertcol->push_back(recob::Vertex(vpos));
     if (debug) std::cout << "NuGraph vertex pos=" << vpos[0] << ", " << vpos[1] << ", " << vpos[2] << std::endl;
   } else {

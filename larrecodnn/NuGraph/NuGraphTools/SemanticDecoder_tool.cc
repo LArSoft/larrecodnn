@@ -44,14 +44,14 @@ public:
    *
    * @param art::Event event record
    */
-  void writeEmptyToEvent(art::Event& e, vector<vector<size_t> >& idsmap) override;
+  void writeEmptyToEvent(art::Event& e, const vector<vector<size_t> >& idsmap) override;
 
   /**
    * @brief Decoder function
    *
    * @param art::Event event record for decoder
    */
-  void writeToEvent(art::Event& e, vector<vector<size_t> >& idsmap, const lartriton::TritonOutputMap& infer_result) override;
+  void writeToEvent(art::Event& e, const vector<vector<size_t> >& idsmap, const vector<NuGraphOutput>& infer_output) override;
 
 private:
 
@@ -72,7 +72,7 @@ void SemanticDecoder::configure(const fhicl::ParameterSet& p) {
 
 }
 
-void SemanticDecoder::writeEmptyToEvent(art::Event& e, vector<vector<size_t> >& idsmap) {
+void SemanticDecoder::writeEmptyToEvent(art::Event& e, const vector<vector<size_t> >& idsmap) {
   //
   std::unique_ptr<MVADescription<5>> semtdes(
                           new MVADescription<5>("nuslhits",//hitListHandle.provenance()->moduleLabel(), FIMXE
@@ -87,7 +87,7 @@ void SemanticDecoder::writeEmptyToEvent(art::Event& e, vector<vector<size_t> >& 
   //
 }
 
-void SemanticDecoder::writeToEvent(art::Event& e, vector<vector<size_t> >& idsmap, const lartriton::TritonOutputMap& infer_result) {
+void SemanticDecoder::writeToEvent(art::Event& e, const vector<vector<size_t> >& idsmap, const vector<NuGraphOutput>& infer_output) {
   //
   std::unique_ptr<MVADescription<5>> semtdes(
                           new MVADescription<5>("nuslhits",//hitListHandle.provenance()->moduleLabel(), FIMXE
@@ -99,29 +99,15 @@ void SemanticDecoder::writeToEvent(art::Event& e, vector<vector<size_t> >& idsma
   for (auto& v : idsmap) size += v.size();
   std::unique_ptr<vector<FeatureVector<5>>> semtcol(new vector<FeatureVector<5>>(size, FeatureVector<5>(std::array<float, 5>({-1., -1., -1., -1., -1.}))));
 
-  const auto& triton_output0 = infer_result.at("x_semantic_u");
-  const auto& prob0 = triton_output0.fromServer<float>();
-  size_t triton_input0_elements = std::distance(prob0[0].begin(), prob0[0].end());
-
-  const auto& triton_output1 = infer_result.at("x_semantic_v");
-  const auto& prob1 = triton_output1.fromServer<float>();
-  size_t triton_input1_elements = std::distance(prob1[0].begin(), prob1[0].end());
-
-  const auto& triton_output2 = infer_result.at("x_semantic_y");
-  const auto& prob2 = triton_output2.fromServer<float>();
-  size_t triton_input2_elements = std::distance(prob2[0].begin(), prob2[0].end());
-
   std::vector<float> x_semantic_u_data;
-  x_semantic_u_data.reserve(triton_input0_elements);
-  x_semantic_u_data.insert(x_semantic_u_data.end(), prob0[0].begin(), prob0[0].end());
-
   std::vector<float> x_semantic_v_data;
-  x_semantic_v_data.reserve(triton_input1_elements);
-  x_semantic_v_data.insert(x_semantic_v_data.end(), prob1[0].begin(), prob1[0].end());
-
   std::vector<float> x_semantic_y_data;
-  x_semantic_y_data.reserve(triton_input2_elements);
-  x_semantic_y_data.insert(x_semantic_y_data.end(), prob2[0].begin(), prob2[0].end());
+
+  for (auto& io : infer_output) {
+    if (io.output_name == "x_semantic_u") x_semantic_u_data = io.output_vec;
+    if (io.output_name == "x_semantic_v") x_semantic_v_data = io.output_vec;
+    if (io.output_name == "x_semantic_y") x_semantic_y_data = io.output_vec;
+  }
 
   if (debug) {
     std::cout << "x_semantic_u: " << std::endl;

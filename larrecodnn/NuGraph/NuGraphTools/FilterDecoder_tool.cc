@@ -44,14 +44,14 @@ public:
    *
    * @param art::Event event record
    */
-  void writeEmptyToEvent(art::Event& e, vector<vector<size_t> >& idsmap) override;
+  void writeEmptyToEvent(art::Event& e, const vector<vector<size_t> >& idsmap) override;
 
   /**
    * @brief Decoder function
    *
    * @param art::Event event record for decoder
    */
-  void writeToEvent(art::Event& e, vector<vector<size_t> >& idsmap, const lartriton::TritonOutputMap& infer_result) override;
+  void writeToEvent(art::Event& e, const vector<vector<size_t> >& idsmap, const vector<NuGraphOutput>& infer_output) override;
 
 private:
 
@@ -71,7 +71,7 @@ void FilterDecoder::configure(const fhicl::ParameterSet& p) {
 
 }
 
-void FilterDecoder::writeEmptyToEvent(art::Event& e, vector<vector<size_t> >& idsmap) {
+void FilterDecoder::writeEmptyToEvent(art::Event& e, const vector<vector<size_t> >& idsmap) {
   //
   size_t size = 0;
   for (auto& v : idsmap) size += v.size();
@@ -80,35 +80,21 @@ void FilterDecoder::writeEmptyToEvent(art::Event& e, vector<vector<size_t> >& id
   //
 }
 
-void FilterDecoder::writeToEvent(art::Event& e, vector<vector<size_t> >& idsmap, const lartriton::TritonOutputMap& infer_result) {
+void FilterDecoder::writeToEvent(art::Event& e, const vector<vector<size_t> >& idsmap, const vector<NuGraphOutput>& infer_output) {
   //
   size_t size = 0;
   for (auto& v : idsmap) size += v.size();
   std::unique_ptr<vector<FeatureVector<1>>> filtcol(new vector<FeatureVector<1>>(size, FeatureVector<1>(std::array<float, 1>({-1.}))));
 
-  const auto& triton_output3 = infer_result.at("x_filter_u");
-  const auto& prob3 = triton_output3.fromServer<float>();
-  size_t triton_input3_elements = std::distance(prob3[0].begin(), prob3[0].end());
-
-  const auto& triton_output4 = infer_result.at("x_filter_v");
-  const auto& prob4 = triton_output4.fromServer<float>();
-  size_t triton_input4_elements = std::distance(prob4[0].begin(), prob4[0].end());
-
-  const auto& triton_output5 = infer_result.at("x_filter_y");
-  const auto& prob5 = triton_output5.fromServer<float>();
-  size_t triton_input5_elements = std::distance(prob5[0].begin(), prob5[0].end());
-
   std::vector<float> x_filter_u_data;
-  x_filter_u_data.reserve(triton_input3_elements);
-  x_filter_u_data.insert(x_filter_u_data.end(), prob3[0].begin(), prob3[0].end());
-
   std::vector<float> x_filter_v_data;
-  x_filter_v_data.reserve(triton_input4_elements);
-  x_filter_v_data.insert(x_filter_v_data.end(), prob4[0].begin(), prob4[0].end());
-
   std::vector<float> x_filter_y_data;
-  x_filter_y_data.reserve(triton_input5_elements);
-  x_filter_y_data.insert(x_filter_y_data.end(), prob5[0].begin(), prob5[0].end());
+
+  for (auto& io : infer_output) {
+    if (io.output_name == "x_filter_u") x_filter_u_data = io.output_vec;
+    if (io.output_name == "x_filter_v") x_filter_v_data = io.output_vec;
+    if (io.output_name == "x_filter_y") x_filter_y_data = io.output_vec;
+  }
 
   if (debug) {
     std::cout << "x_filter_u: " << std::endl;

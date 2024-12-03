@@ -18,6 +18,13 @@
 using std::vector;
 using std::string;
 
+struct NuGraphOutput {
+  NuGraphOutput(string s, vector<float> vf):
+    output_name(s),output_vec(vf){}
+  string output_name;
+  vector<float> output_vec;
+};
+
 class DecoderToolBase {
 
 public:
@@ -50,7 +57,7 @@ public:
      *
      * @param art::Event event record
      */
-    virtual void writeEmptyToEvent(art::Event& e, vector<vector<size_t> >& idsmap) = 0;
+    virtual void writeEmptyToEvent(art::Event& e, const vector<vector<size_t> >& idsmap) = 0;
 
     /**
      * @brief writeToEvent function
@@ -58,7 +65,7 @@ public:
      * @param art::Event event record
      * @param TritonOutputMap
      */
-    virtual void writeToEvent(art::Event& e, vector<vector<size_t> >& idsmap, const lartriton::TritonOutputMap& infer_result) = 0;
+    virtual void writeToEvent(art::Event& e, const vector<vector<size_t> >& idsmap, const vector<NuGraphOutput>& infer_output) = 0;
 
     // Function to print elements of a vector<float>
     void printVector(const std::vector<float>& vec)

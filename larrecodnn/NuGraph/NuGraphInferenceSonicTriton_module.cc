@@ -27,9 +27,6 @@
 #include "larrecodnn/NuGraph/NuGraphTools/LoaderToolBase.h"
 #include "larrecodnn/NuGraph/NuGraphTools/DecoderToolBase.h"
 
-#include <getopt.h>
-#include <unistd.h>
-
 #include <chrono>
 #include <fstream>
 #include <iostream>
@@ -181,9 +178,19 @@ void NuGraphInferenceSonicTriton::produce(art::Event& e)
   std::chrono::duration<double> elapsed = end - start;
   std::cout << "Time taken for inference: " << elapsed.count() << " seconds" << std::endl;
 
+  vector<NuGraphOutput> infer_output;
+  for (const auto& pair : infer_result) {
+    const auto& prob = pair.second.fromServer<float>();
+    size_t n_elements = std::distance(prob[0].begin(), prob[0].end());
+    std::vector<float> out_data;
+    out_data.reserve(n_elements);
+    out_data.insert(out_data.end(), prob[0].begin(), prob[0].end());
+    infer_output.push_back(NuGraphOutput(pair.first,out_data));
+  }
+
   // Write the outputs to the output root file
   for (size_t i = 0; i < _decoderToolsVec.size(); i++) {
-    _decoderToolsVec[i]->writeToEvent(e, idsmap, infer_result);
+    _decoderToolsVec[i]->writeToEvent(e, idsmap, infer_output);
   }
 }
 
