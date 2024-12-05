@@ -53,11 +53,6 @@ public:
    */
   void writeToEvent(art::Event& e, const vector<vector<size_t> >& idsmap, const vector<NuGraphOutput>& infer_output) override;
 
-private:
-
-  bool debug;
-  vector<std::string> planes;
-
 };
 
 SemanticDecoder::SemanticDecoder(const fhicl::ParameterSet &p)
@@ -66,10 +61,7 @@ SemanticDecoder::SemanticDecoder(const fhicl::ParameterSet &p)
 }
 
 void SemanticDecoder::configure(const fhicl::ParameterSet& p) {
-  debug = p.get<bool>("debug");
-  planes = p.get<vector<std::string>>("planes");
   //to do: take list of classes from config (and allow for variable number of classes)
-
 }
 
 void SemanticDecoder::writeEmptyToEvent(art::Event& e, const vector<vector<size_t> >& idsmap) {

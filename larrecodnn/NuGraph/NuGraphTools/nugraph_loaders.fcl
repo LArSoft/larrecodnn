@@ -3,7 +3,6 @@ BEGIN_PROLOG
 StandardLoader: {
    hitInput: "nuslhits"
    spsInput: "sps"
-   planes: ["u","v","y"]
    tool_type: "StandardLoader"
 }
 

@@ -53,11 +53,6 @@ public:
    */
   void writeToEvent(art::Event& e, const vector<vector<size_t> >& idsmap, const vector<NuGraphOutput>& infer_output) override;
 
-private:
-
-  bool debug;
-  vector<std::string> planes;
-
 };
 
 FilterDecoder::FilterDecoder(const fhicl::ParameterSet &p)
@@ -65,11 +60,7 @@ FilterDecoder::FilterDecoder(const fhicl::ParameterSet &p)
   configure(p);
 }
 
-void FilterDecoder::configure(const fhicl::ParameterSet& p) {
-  debug = p.get<bool>("debug");
-  planes = p.get<vector<std::string>>("planes");
-
-}
+void FilterDecoder::configure(const fhicl::ParameterSet& p) {}
 
 void FilterDecoder::writeEmptyToEvent(art::Event& e, const vector<vector<size_t> >& idsmap) {
   //

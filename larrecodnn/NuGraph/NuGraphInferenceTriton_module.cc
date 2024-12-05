@@ -75,6 +75,7 @@ public:
 private:
   size_t minHits;
   bool debug;
+  vector<std::string> planes;
   std::string inference_url;
   std::string inference_model_name;
   std::string model_version;
@@ -95,6 +96,7 @@ NuGraphInferenceTriton::NuGraphInferenceTriton(fhicl::ParameterSet const& p)
   : EDProducer{p}
   , minHits(p.get<size_t>("minHits"))
   , debug(p.get<bool>("debug"))
+  , planes(p.get<vector<std::string>>("planes"))
 {
 
   fhicl::ParameterSet tritonPset = p.get<fhicl::ParameterSet>("TritonConfig");
@@ -110,6 +112,7 @@ NuGraphInferenceTriton::NuGraphInferenceTriton(fhicl::ParameterSet const& p)
 
   // Loader Tool
   _loaderTool = art::make_tool<LoaderToolBase>( p.get<fhicl::ParameterSet>("LoaderTool") );
+  _loaderTool->setDebugAndPlanes(debug,planes);
 
   // configure and construct Decoder Tools
   auto const tool_psets = p.get<fhicl::ParameterSet>("DecoderTools");
@@ -118,6 +121,7 @@ NuGraphInferenceTriton::NuGraphInferenceTriton(fhicl::ParameterSet const& p)
     std::cout << "decoder lablel: " << tool_pset_labels << std::endl;
     auto const tool_pset = tool_psets.get<fhicl::ParameterSet>(tool_pset_labels);
     _decoderToolsVec.push_back(art::make_tool<DecoderToolBase>(tool_pset));
+    _decoderToolsVec.back()->setDebugAndPlanes(debug,planes);
   }
 
   for (size_t i = 0; i < _decoderToolsVec.size(); i++) {

@@ -117,6 +117,7 @@ NuGraphInference::NuGraphInference(fhicl::ParameterSet const& p)
 
   // Loader Tool
   _loaderTool = art::make_tool<LoaderToolBase>( p.get<fhicl::ParameterSet>("LoaderTool") );
+  _loaderTool->setDebugAndPlanes(debug,planes);
 
   // configure and construct Decoder Tools
   auto const tool_psets = p.get<fhicl::ParameterSet>("DecoderTools");
@@ -125,6 +126,7 @@ NuGraphInference::NuGraphInference(fhicl::ParameterSet const& p)
     std::cout << "decoder lablel: " << tool_pset_labels << std::endl;
     auto const tool_pset = tool_psets.get<fhicl::ParameterSet>(tool_pset_labels);
     _decoderToolsVec.push_back(art::make_tool<DecoderToolBase>(tool_pset));
+    _decoderToolsVec.back()->setDebugAndPlanes(debug,planes);
   }
 
   for (size_t i = 0; i < _decoderToolsVec.size(); i++) {

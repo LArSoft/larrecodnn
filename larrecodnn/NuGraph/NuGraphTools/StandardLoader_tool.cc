@@ -42,7 +42,6 @@ public:
 
 private:
 
-  vector<std::string> planes;
   art::InputTag hitInput;
   art::InputTag spsInput;
 
@@ -54,7 +53,6 @@ StandardLoader::StandardLoader(const fhicl::ParameterSet &p)
 }
 
 void StandardLoader::configure(const fhicl::ParameterSet& p) {
-  planes = p.get<vector<std::string>>("planes");
   hitInput = p.get<art::InputTag>("hitInput");
   spsInput = p.get<art::InputTag>("spsInput");
 }

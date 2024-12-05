@@ -6,6 +6,7 @@ BEGIN_PROLOG
 NuGraphCommon: { 
    minHits: 10
    debug: false
+   planes: ["u","v","y"]
    LoaderTool: @local::StandardLoader
    DecoderTools: {
        FilterDecoderTool: @local::FilterDecoderTool
@@ -28,8 +29,7 @@ TritonConfig: {
 }
 
 NuGraph: {
-   @table::NuGraphCommon 
-   planes: ["u","v","y"]
+   @table::NuGraphCommon
    avgs_u: [389.00632, 173.42017, 144.42065, 4.5582113]
    avgs_v: [3.6914261e+02, 1.7347592e+02, 8.5748262e+08, 4.4525051e+00]
    avgs_y: [547.38995, 173.13017, 109.57691, 4.1024675]

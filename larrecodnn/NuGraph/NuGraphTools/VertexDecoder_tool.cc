@@ -52,7 +52,7 @@ public:
 
 private:
 
-  bool debug;
+  // bool debug;
   string outputDictElem;
 
 };
@@ -63,7 +63,7 @@ VertexDecoder::VertexDecoder(const fhicl::ParameterSet &p)
 }
 
 void VertexDecoder::configure(const fhicl::ParameterSet& p) {
-  debug = p.get<bool>("debug");
+  // debug = p.get<bool>("debug");
   outputDictElem = p.get<string>("outputDictElem");
 
 }

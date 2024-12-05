@@ -51,6 +51,12 @@ public:
    * @param art::Event event record, list of input, idsmap
    */
   virtual void loadData(art::Event& e, vector<art::Ptr<recob::Hit>>& hitlist, vector<NuGraphInput>& inputs, vector<vector<size_t> >& idsmap) = 0;
+
+  void setDebugAndPlanes(bool d, vector<std::string>& p) { debug = d; planes = p;}
+
+protected:
+  bool debug;
+  vector<std::string> planes;
 };
 
 #endif

@@ -96,6 +96,13 @@ public:
       return;
     }
 
+    void setDebugAndPlanes(bool d, vector<std::string>& p) { debug = d; planes = p;}
+
+protected:
+
+  bool debug;
+  vector<std::string> planes;
+
 };
 
 #endif
