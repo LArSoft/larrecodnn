@@ -37,7 +37,10 @@ public:
      *
      *  @param ParameterSet  The input set of parameters for configuration
      */
-    void configure(const fhicl::ParameterSet&){};
+    void configure(const fhicl::ParameterSet& p){
+      instancename = p.get<std::string>("instanceName","filter");
+      outputname = p.get<std::string>("outputName","x_filter_");
+    };
 
     /**
      *  @brief Type of decoder, used for declaring what is produced
@@ -102,6 +105,8 @@ protected:
 
   bool debug;
   vector<std::string> planes;
+  std::string instancename;
+  std::string outputname;
 
 };
 

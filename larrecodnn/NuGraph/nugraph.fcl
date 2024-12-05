@@ -13,6 +13,7 @@ NuGraphCommon: {
        SemanticDecoderTool: @local::SemanticDecoderTool
    }
 }
+NuGraphCommon.DecoderTools.SemanticDecoderTool.hitInput: @local::NuGraphCommon.LoaderTool.hitInput
 
 TritonConfig: {
     serverURL: @nil  #"test-1-eaf.fnal.gov:443"
