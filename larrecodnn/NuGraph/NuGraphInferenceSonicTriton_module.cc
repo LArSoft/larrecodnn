@@ -41,18 +41,6 @@ using anab::MVADescription;
 using recob::Hit;
 using std::vector;
 
-// Function to print elements of a vector<float>
-void printVector(const std::vector<float>& vec)
-{
-  for (size_t i = 0; i < vec.size(); ++i) {
-    std::cout << vec[i];
-    // Print space unless it's the last element
-    if (i != vec.size() - 1) { std::cout << " "; }
-  }
-  std::cout << std::endl;
-  std::cout << std::endl;
-}
-
 class NuGraphInferenceSonicTriton : public art::EDProducer {
 public:
   explicit NuGraphInferenceSonicTriton(fhicl::ParameterSet const& p);
@@ -136,9 +124,11 @@ NuGraphInferenceSonicTriton::NuGraphInferenceSonicTriton(fhicl::ParameterSet con
 void NuGraphInferenceSonicTriton::produce(art::Event& e)
 {
 
+  //
   // Load the data and fill the graph inputs
+  //
   vector<art::Ptr<Hit>> hitlist;
-  vector<vector<size_t>> idsmap;//(planes.size(), vector<size_t>());
+  vector<vector<size_t>> idsmap;
   vector<NuGraphInput> graphinputs;
   _loaderTool->loadData(e,hitlist,graphinputs,idsmap);
 
@@ -151,7 +141,9 @@ void NuGraphInferenceSonicTriton::produce(art::Event& e)
     return;
   }
 
+  //
   // NuSonic Triton Server section
+  //
   auto start = std::chrono::high_resolution_clock::now();
   //
   //Here the input should be sent to Triton
@@ -178,6 +170,9 @@ void NuGraphInferenceSonicTriton::produce(art::Event& e)
   std::chrono::duration<double> elapsed = end - start;
   std::cout << "Time taken for inference: " << elapsed.count() << " seconds" << std::endl;
 
+  //
+  // Get pointers to the result returned and write to the event
+  //
   vector<NuGraphOutput> infer_output;
   for (const auto& pair : infer_result) {
     const auto& prob = pair.second.fromServer<float>();

@@ -9,8 +9,6 @@
 #include "art/Framework/Principal/Event.h"
 #include "art/Framework/Core/EDProducer.h"
 
-#include "larrecodnn/ImagePatternAlgs/NuSonic/Triton/TritonData.h"
-
 #include <vector>
 #include <string>
 #include <utility>
@@ -63,7 +61,8 @@ public:
      * @brief writeToEvent function
      *
      * @param art::Event event record
-     * @param TritonOutputMap
+     * @param idsmap
+     * @param infer_output
      */
     virtual void writeToEvent(art::Event& e, const vector<vector<size_t> >& idsmap, const vector<NuGraphOutput>& infer_output) = 0;
 
