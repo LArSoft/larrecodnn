@@ -82,7 +82,8 @@ void SemanticDecoder::writeEmptyToEvent(art::Event& e, const vector<vector<size_
   //
   size_t size = 0;
   for (auto& v : idsmap) size += v.size();
-  std::unique_ptr<vector<FeatureVector<5>>> semtcol(new vector<FeatureVector<5>>(size, FeatureVector<5>(std::array<float, 5>({-1., -1., -1., -1., -1.}))));
+  std::array<float, 5> arr; std::fill(arr.begin(), arr.end(), -1.);
+  std::unique_ptr<vector<FeatureVector<5>>> semtcol(new vector<FeatureVector<5>>(size, FeatureVector<5>(arr)));
   e.put(std::move(semtcol), instancename);
   //
 }
@@ -94,7 +95,8 @@ void SemanticDecoder::writeToEvent(art::Event& e, const vector<vector<size_t> >&
   //
   size_t size = 0;
   for (auto& v : idsmap) size += v.size();
-  std::unique_ptr<vector<FeatureVector<5>>> semtcol(new vector<FeatureVector<5>>(size, FeatureVector<5>(std::array<float, 5>({-1., -1., -1., -1., -1.}))));
+  std::array<float, 5> arr; std::fill(arr.begin(), arr.end(), -1.);
+  std::unique_ptr<vector<FeatureVector<5>>> semtcol(new vector<FeatureVector<5>>(size, FeatureVector<5>(arr)));
 
   size_t n_cols = categories.size();
   for (size_t p = 0; p < planes.size(); p++) {
