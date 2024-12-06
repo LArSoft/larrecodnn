@@ -247,8 +247,8 @@ fwdir	product_dir	config_data
 #   entry to match for a given product.
 #
 ####################################
-product		version		qual	flags		<table_format= 2>
-larreco		v10_00_01	-
+product		version		qual	flags		<table_format=2>
+larreco		v10_01_01	-
 larfinder       v09_00_01       -
 tensorflow	v2_15_0		-	optional
 triton		v2_25_0d	-	optional

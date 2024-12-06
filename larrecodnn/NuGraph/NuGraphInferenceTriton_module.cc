@@ -275,11 +275,11 @@ void NuGraphInferenceTriton::produce(art::Event& e)
     spacepoint_table_hit_id_y_ptr.reset(spacepoint_table_hit_id_y);
 
     FAIL_IF_ERR(hit_table_hit_id_ptr->AppendRaw(reinterpret_cast<const uint8_t*>(hit_table_hit_id_data->data()),
-						hit_table_hit_id_data->size() * sizeof(float)),
+						hit_table_hit_id_data->size() * sizeof(int32_t)),
 		"unable to set data for hit_table_hit_id");
 
     FAIL_IF_ERR(hit_table_local_plane_ptr->AppendRaw(reinterpret_cast<const uint8_t*>(hit_table_local_plane_data->data()),
-						     hit_table_local_plane_data->size() * sizeof(float)),
+						     hit_table_local_plane_data->size() * sizeof(int32_t)),
                 "unable to set data for hit_table_local_plane");
 
     FAIL_IF_ERR(
@@ -289,7 +289,7 @@ void NuGraphInferenceTriton::produce(art::Event& e)
 
     FAIL_IF_ERR(
       hit_table_local_wire_ptr->AppendRaw(reinterpret_cast<const uint8_t*>(hit_table_local_wire_data->data()),
-                                          hit_table_local_wire_data->size() * sizeof(float)),
+                                          hit_table_local_wire_data->size() * sizeof(int32_t)),
       "unable to set data for hit_table_local_wire");
 
     FAIL_IF_ERR(
@@ -302,19 +302,19 @@ void NuGraphInferenceTriton::produce(art::Event& e)
                 "unable to set data for hit_table_rms");
 
     FAIL_IF_ERR(spacepoint_table_spacepoint_id_ptr->AppendRaw(reinterpret_cast<const uint8_t*>(spacepoint_table_spacepoint_id_data->data()),
-							      spacepoint_table_spacepoint_id_data->size() * sizeof(float)),
+							      spacepoint_table_spacepoint_id_data->size() * sizeof(int32_t)),
                 "unable to set data for spacepoint_table_spacepoint_id");
 
     FAIL_IF_ERR(spacepoint_table_hit_id_u_ptr->AppendRaw(reinterpret_cast<const uint8_t*>(spacepoint_table_hit_id_u_data->data()),
-							 spacepoint_table_hit_id_u_data->size() * sizeof(float)),
+							 spacepoint_table_hit_id_u_data->size() * sizeof(int32_t)),
                 "unable to set data for spacepoint_table_hit_id_u");
 
     FAIL_IF_ERR(spacepoint_table_hit_id_v_ptr->AppendRaw(reinterpret_cast<const uint8_t*>(spacepoint_table_hit_id_v_data->data()),
-							 spacepoint_table_hit_id_v_data->size() * sizeof(float)),
+							 spacepoint_table_hit_id_v_data->size() * sizeof(int32_t)),
                 "unable to set data for spacepoint_table_hit_id_v");
 
     FAIL_IF_ERR(spacepoint_table_hit_id_y_ptr->AppendRaw(reinterpret_cast<const uint8_t*>(spacepoint_table_hit_id_y_data->data()),
-							 spacepoint_table_hit_id_y_data->size() * sizeof(float)),
+							 spacepoint_table_hit_id_y_data->size() * sizeof(int32_t)),
                 "unable to set data for spacepoint_table_hit_id_y");
 
     // Generate the outputs to be requested.
