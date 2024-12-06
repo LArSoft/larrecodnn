@@ -24,8 +24,8 @@
 #include "larrecodnn/ImagePatternAlgs/NuSonic/Triton/TritonClient.h"
 #include "larrecodnn/ImagePatternAlgs/NuSonic/Triton/TritonData.h"
 
-#include "larrecodnn/NuGraph/NuGraphTools/LoaderToolBase.h"
-#include "larrecodnn/NuGraph/NuGraphTools/DecoderToolBase.h"
+#include "larrecodnn/NuGraph/Tools/LoaderToolBase.h"
+#include "larrecodnn/NuGraph/Tools/DecoderToolBase.h"
 
 #include <chrono>
 #include <fstream>

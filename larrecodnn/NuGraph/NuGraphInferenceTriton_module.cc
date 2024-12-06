@@ -22,8 +22,8 @@
 #include "lardataobj/AnalysisBase/MVAOutput.h"
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/Vertex.h"
-#include "larrecodnn/NuGraph/NuGraphTools/LoaderToolBase.h"
-#include "larrecodnn/NuGraph/NuGraphTools/DecoderToolBase.h"
+#include "larrecodnn/NuGraph/Tools/LoaderToolBase.h"
+#include "larrecodnn/NuGraph/Tools/DecoderToolBase.h"
 
 #include <chrono>
 #include <fstream>

@@ -30,8 +30,8 @@
 #include "lardataobj/RecoBase/SpacePoint.h"
 #include "lardataobj/RecoBase/Vertex.h" //this creates a conflict with torch script if included before it...
 
-#include "larrecodnn/NuGraph/NuGraphTools/LoaderToolBase.h"
-#include "larrecodnn/NuGraph/NuGraphTools/DecoderToolBase.h"
+#include "larrecodnn/NuGraph/Tools/LoaderToolBase.h"
+#include "larrecodnn/NuGraph/Tools/DecoderToolBase.h"
 
 class NuGraphInference;
 
