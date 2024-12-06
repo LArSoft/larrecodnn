@@ -9,7 +9,7 @@
 using anab::FeatureVector;
 using anab::MVADescription;
 
-// fixme:this only works for 5 categories and should be extended to different sizes. to do: allow for variable number of classes
+// fixme: this only works for 5 categories and should be extended to different sizes. This may require making the class templated.
 class SemanticDecoder : public DecoderToolBase
 {
 
@@ -118,11 +118,8 @@ void SemanticDecoder::writeToEvent(art::Event& e, const vector<vector<size_t> >&
 
     for (int i = 0; i < s.sizes()[0]; ++i) {
       size_t idx = idsmap[p][i];
-      std::array<float, 5> input({s[i][0].item<float>(),
-	                          s[i][1].item<float>(),
-	                          s[i][2].item<float>(),
-	                          s[i][3].item<float>(),
-	                          s[i][4].item<float>()});
+      std::array<float, 5> input;
+      for (size_t j=0; j<n_cols; ++j) input[j] = s[i][j].item<float>();
       softmax(input);
       FeatureVector<5> semt = FeatureVector<5>(input);
       (*semtcol)[idx] = semt;
