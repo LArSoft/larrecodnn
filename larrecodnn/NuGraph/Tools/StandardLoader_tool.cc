@@ -3,29 +3,27 @@
 
 #include "LoaderToolBase.h"
 
-#include "canvas/Persistency/Common/Ptr.h"
 #include "canvas/Persistency/Common/FindManyP.h"
+#include "canvas/Persistency/Common/Ptr.h"
 #include "canvas/Utilities/InputTag.h"
 #include "lardataobj/RecoBase/SpacePoint.h"
 #include <torch/torch.h>
 
-class StandardLoader : public LoaderToolBase
-{
+class StandardLoader : public LoaderToolBase {
 
 public:
-
   /**
    *  @brief  Constructor
    *
    *  @param  pset
    */
-  StandardLoader(const fhicl::ParameterSet &pset);
+  StandardLoader(const fhicl::ParameterSet& pset);
 
   /**
    *  @brief  Virtual Destructor
    */
   virtual ~StandardLoader() noexcept = default;
-    
+
   /**
    *  @brief Interface for configuring the particular algorithm tool
    *
@@ -38,26 +36,32 @@ public:
    *
    * @param art::Event event record, list of input, idsmap
    */
-  void loadData(art::Event& e, vector<art::Ptr<recob::Hit>>& hitlist, vector<NuGraphInput>& inputs, vector<vector<size_t> >& idsmap) override;
+  void loadData(art::Event& e,
+                vector<art::Ptr<recob::Hit>>& hitlist,
+                vector<NuGraphInput>& inputs,
+                vector<vector<size_t>>& idsmap) override;
 
 private:
-
   art::InputTag hitInput;
   art::InputTag spsInput;
-
 };
 
-StandardLoader::StandardLoader(const fhicl::ParameterSet &p)
+StandardLoader::StandardLoader(const fhicl::ParameterSet& p)
 {
   configure(p);
 }
 
-void StandardLoader::configure(const fhicl::ParameterSet& p) {
+void StandardLoader::configure(const fhicl::ParameterSet& p)
+{
   hitInput = p.get<art::InputTag>("hitInput");
   spsInput = p.get<art::InputTag>("spsInput");
 }
 
-void StandardLoader::loadData(art::Event& e, vector<art::Ptr<recob::Hit>>& hitlist, vector<NuGraphInput>& inputs, vector<vector<size_t> >& idsmap) {
+void StandardLoader::loadData(art::Event& e,
+                              vector<art::Ptr<recob::Hit>>& hitlist,
+                              vector<NuGraphInput>& inputs,
+                              vector<vector<size_t>>& idsmap)
+{
   //
   art::Handle<vector<recob::Hit>> hitListHandle;
   if (e.getByLabel(hitInput, hitListHandle)) { art::fill_ptr_vector(hitlist, hitListHandle); }
@@ -114,18 +118,18 @@ void StandardLoader::loadData(art::Event& e, vector<art::Ptr<recob::Hit>>& hitli
     }
   }
 
-  inputs.push_back(NuGraphInput("hit_table_hit_id",hit_table_hit_id_data));
-  inputs.push_back(NuGraphInput("hit_table_local_plane",hit_table_local_plane_data));
-  inputs.push_back(NuGraphInput("hit_table_local_time",hit_table_local_time_data));
-  inputs.push_back(NuGraphInput("hit_table_local_wire",hit_table_local_wire_data));
-  inputs.push_back(NuGraphInput("hit_table_integral",hit_table_integral_data));
-  inputs.push_back(NuGraphInput("hit_table_rms",hit_table_rms_data));
+  inputs.push_back(NuGraphInput("hit_table_hit_id", hit_table_hit_id_data));
+  inputs.push_back(NuGraphInput("hit_table_local_plane", hit_table_local_plane_data));
+  inputs.push_back(NuGraphInput("hit_table_local_time", hit_table_local_time_data));
+  inputs.push_back(NuGraphInput("hit_table_local_wire", hit_table_local_wire_data));
+  inputs.push_back(NuGraphInput("hit_table_integral", hit_table_integral_data));
+  inputs.push_back(NuGraphInput("hit_table_rms", hit_table_rms_data));
 
-  inputs.push_back(NuGraphInput("spacepoint_table_spacepoint_id",spacepoint_table_spacepoint_id_data));
-  inputs.push_back(NuGraphInput("spacepoint_table_hit_id_u",spacepoint_table_hit_id_u_data));
-  inputs.push_back(NuGraphInput("spacepoint_table_hit_id_v",spacepoint_table_hit_id_v_data));
-  inputs.push_back(NuGraphInput("spacepoint_table_hit_id_y",spacepoint_table_hit_id_y_data));  
-  
+  inputs.push_back(
+    NuGraphInput("spacepoint_table_spacepoint_id", spacepoint_table_spacepoint_id_data));
+  inputs.push_back(NuGraphInput("spacepoint_table_hit_id_u", spacepoint_table_hit_id_u_data));
+  inputs.push_back(NuGraphInput("spacepoint_table_hit_id_v", spacepoint_table_hit_id_v_data));
+  inputs.push_back(NuGraphInput("spacepoint_table_hit_id_y", spacepoint_table_hit_id_y_data));
 }
 DEFINE_ART_CLASS_TOOL(StandardLoader)
 

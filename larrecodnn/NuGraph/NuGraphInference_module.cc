@@ -30,8 +30,8 @@
 #include "lardataobj/RecoBase/SpacePoint.h"
 #include "lardataobj/RecoBase/Vertex.h" //this creates a conflict with torch script if included before it...
 
-#include "larrecodnn/NuGraph/Tools/LoaderToolBase.h"
 #include "larrecodnn/NuGraph/Tools/DecoderToolBase.h"
+#include "larrecodnn/NuGraph/Tools/LoaderToolBase.h"
 
 class NuGraphInference;
 
@@ -109,17 +109,16 @@ NuGraphInference::NuGraphInference(fhicl::ParameterSet const& p)
   }
 
   // Loader Tool
-  _loaderTool = art::make_tool<LoaderToolBase>( p.get<fhicl::ParameterSet>("LoaderTool") );
-  _loaderTool->setDebugAndPlanes(debug,planes);
+  _loaderTool = art::make_tool<LoaderToolBase>(p.get<fhicl::ParameterSet>("LoaderTool"));
+  _loaderTool->setDebugAndPlanes(debug, planes);
 
   // configure and construct Decoder Tools
   auto const tool_psets = p.get<fhicl::ParameterSet>("DecoderTools");
-  for (auto const &tool_pset_labels : tool_psets.get_pset_names())
-  {
+  for (auto const& tool_pset_labels : tool_psets.get_pset_names()) {
     std::cout << "decoder lablel: " << tool_pset_labels << std::endl;
     auto const tool_pset = tool_psets.get<fhicl::ParameterSet>(tool_pset_labels);
     _decoderToolsVec.push_back(art::make_tool<DecoderToolBase>(tool_pset));
-    _decoderToolsVec.back()->setDebugAndPlanes(debug,planes);
+    _decoderToolsVec.back()->setDebugAndPlanes(debug, planes);
     _decoderToolsVec.back()->declareProducts(producesCollector());
   }
 
@@ -136,7 +135,7 @@ void NuGraphInference::produce(art::Event& e)
   vector<art::Ptr<Hit>> hitlist;
   vector<vector<size_t>> idsmap;
   vector<NuGraphInput> graphinputs;
-  _loaderTool->loadData(e,hitlist,graphinputs,idsmap);
+  _loaderTool->loadData(e, hitlist, graphinputs, idsmap);
 
   if (debug) std::cout << "Hits size=" << hitlist.size() << std::endl;
   if (hitlist.size() < minHits) {
@@ -153,28 +152,37 @@ void NuGraphInference::produce(art::Event& e)
   const vector<int32_t>* spids = 0;
   const vector<int32_t>* hitids_u = 0;
   const vector<int32_t>* hitids_v = 0;
-  const vector<int32_t>*  hitids_y = 0;
-  const vector<int32_t>*  hit_plane = 0;
-  const vector<float>*  hit_time = 0;
-  const vector<int32_t>*  hit_wire = 0;
-  const vector<float>*  hit_integral = 0;
-  const vector<float>*  hit_rms = 0;
+  const vector<int32_t>* hitids_y = 0;
+  const vector<int32_t>* hit_plane = 0;
+  const vector<float>* hit_time = 0;
+  const vector<int32_t>* hit_wire = 0;
+  const vector<float>* hit_integral = 0;
+  const vector<float>* hit_rms = 0;
   for (const auto& gi : graphinputs) {
-    if (gi.input_name == "spacepoint_table_spacepoint_id") spids = &gi.input_int32_vec;
-    else if (gi.input_name == "spacepoint_table_hit_id_u") hitids_u = &gi.input_int32_vec;
-    else if (gi.input_name == "spacepoint_table_hit_id_v") hitids_v = &gi.input_int32_vec;
-    else if (gi.input_name == "spacepoint_table_hit_id_y") hitids_y = &gi.input_int32_vec;
-    else if (gi.input_name == "hit_table_local_plane") hit_plane = &gi.input_int32_vec;
-    else if (gi.input_name == "hit_table_local_time") hit_time = &gi.input_float_vec;
-    else if (gi.input_name == "hit_table_local_wire") hit_wire = &gi.input_int32_vec;
-    else if (gi.input_name == "hit_table_integral") hit_integral = &gi.input_float_vec;
-    else if (gi.input_name == "hit_table_rms") hit_rms = &gi.input_float_vec;
+    if (gi.input_name == "spacepoint_table_spacepoint_id")
+      spids = &gi.input_int32_vec;
+    else if (gi.input_name == "spacepoint_table_hit_id_u")
+      hitids_u = &gi.input_int32_vec;
+    else if (gi.input_name == "spacepoint_table_hit_id_v")
+      hitids_v = &gi.input_int32_vec;
+    else if (gi.input_name == "spacepoint_table_hit_id_y")
+      hitids_y = &gi.input_int32_vec;
+    else if (gi.input_name == "hit_table_local_plane")
+      hit_plane = &gi.input_int32_vec;
+    else if (gi.input_name == "hit_table_local_time")
+      hit_time = &gi.input_float_vec;
+    else if (gi.input_name == "hit_table_local_wire")
+      hit_wire = &gi.input_int32_vec;
+    else if (gi.input_name == "hit_table_integral")
+      hit_integral = &gi.input_float_vec;
+    else if (gi.input_name == "hit_table_rms")
+      hit_rms = &gi.input_float_vec;
   }
 
   // Reverse lookup from key to index in plane index
   vector<size_t> idsmapRev(hitlist.size(), hitlist.size());
   for (const auto& ipv : idsmap) {
-    for (size_t ih=0;ih<ipv.size();ih++) {
+    for (size_t ih = 0; ih < ipv.size(); ih++) {
       idsmapRev[ipv[ih]] = ih;
     }
   }
@@ -196,8 +204,8 @@ void NuGraphInference::produce(art::Event& e)
   vector<vector<Edge>> edge2d(planes.size(), vector<Edge>());
   for (size_t p = 0; p < planes.size(); p++) {
     vector<double> coords;
-    for (size_t i=0;i<hit_plane->size();++i) {
-      if (size_t(hit_plane->at(i))!=p) continue;
+    for (size_t i = 0; i < hit_plane->size(); ++i) {
+      if (size_t(hit_plane->at(i)) != p) continue;
       coords.push_back(hit_time->at(i) * pos_norm[1]);
       coords.push_back(hit_wire->at(i) * pos_norm[0]);
     }
@@ -256,19 +264,19 @@ void NuGraphInference::produce(art::Event& e)
   auto start_preprocess2 = std::chrono::high_resolution_clock::now();
   vector<vector<Edge>> edge3d(planes.size(), vector<Edge>());
   for (size_t i = 0; i < spids->size(); ++i) {
-    if (hitids_u->at(i)>=0) {
+    if (hitids_u->at(i) >= 0) {
       Edge e;
       e.n1 = idsmapRev[hitids_u->at(i)];
       e.n2 = spids->at(i);
       edge3d[0].push_back(e);
     }
-    if (hitids_v->at(i)>=0) {
+    if (hitids_v->at(i) >= 0) {
       Edge e;
       e.n1 = idsmapRev[hitids_v->at(i)];
       e.n2 = spids->at(i);
       edge3d[1].push_back(e);
     }
-    if (hitids_y->at(i)>=0) {
+    if (hitids_y->at(i) >= 0) {
       Edge e;
       e.n1 = idsmapRev[hitids_y->at(i)];
       e.n2 = spids->at(i);
@@ -281,12 +289,15 @@ void NuGraphInference::produce(art::Event& e)
   auto batch = torch::Dict<std::string, torch::Tensor>();
   for (size_t p = 0; p < planes.size(); p++) {
     vector<float> nodeft;
-    for (size_t i=0;i<hit_plane->size();++i) {
-      if (size_t(hit_plane->at(i))!=p) continue;
-      nodeft.push_back( (hit_wire->at(i) * pos_norm[0] - avgs[hit_plane->at(i)][0]) / devs[hit_plane->at(i)][0] );
-      nodeft.push_back( (hit_time->at(i) * pos_norm[1] - avgs[hit_plane->at(i)][1]) / devs[hit_plane->at(i)][1] );
-      nodeft.push_back( (hit_integral->at(i) - avgs[hit_plane->at(i)][2]) / devs[hit_plane->at(i)][2] );
-      nodeft.push_back( (hit_rms->at(i) - avgs[hit_plane->at(i)][3]) / devs[hit_plane->at(i)][3] );
+    for (size_t i = 0; i < hit_plane->size(); ++i) {
+      if (size_t(hit_plane->at(i)) != p) continue;
+      nodeft.push_back((hit_wire->at(i) * pos_norm[0] - avgs[hit_plane->at(i)][0]) /
+                       devs[hit_plane->at(i)][0]);
+      nodeft.push_back((hit_time->at(i) * pos_norm[1] - avgs[hit_plane->at(i)][1]) /
+                       devs[hit_plane->at(i)][1]);
+      nodeft.push_back((hit_integral->at(i) - avgs[hit_plane->at(i)][2]) /
+                       devs[hit_plane->at(i)][2]);
+      nodeft.push_back((hit_rms->at(i) - avgs[hit_plane->at(i)][3]) / devs[hit_plane->at(i)][3]);
     }
     long int dim = nodeft.size() / 4;
     torch::Tensor ix = torch::zeros({dim, 4}, torch::dtype(torch::kFloat32));
@@ -388,12 +399,14 @@ void NuGraphInference::produce(art::Event& e)
     if (elem1.value().isTensor()) {
       torch::Tensor tensor = elem1.value().toTensor();
       std::vector<float> vec(tensor.data_ptr<float>(), tensor.data_ptr<float>() + tensor.numel());
-      infer_output.push_back(NuGraphOutput(elem1.key().to<std::string>(),vec));
-    } else if (elem1.value().isGenericDict()) {
+      infer_output.push_back(NuGraphOutput(elem1.key().to<std::string>(), vec));
+    }
+    else if (elem1.value().isGenericDict()) {
       for (const auto& elem2 : elem1.value().toGenericDict()) {
-	torch::Tensor tensor = elem2.value().toTensor();
-	std::vector<float> vec(tensor.data_ptr<float>(), tensor.data_ptr<float>() + tensor.numel());
-	infer_output.push_back(NuGraphOutput(elem1.key().to<std::string>()+"_"+elem2.key().to<std::string>(),vec));
+        torch::Tensor tensor = elem2.value().toTensor();
+        std::vector<float> vec(tensor.data_ptr<float>(), tensor.data_ptr<float>() + tensor.numel());
+        infer_output.push_back(
+          NuGraphOutput(elem1.key().to<std::string>() + "_" + elem2.key().to<std::string>(), vec));
       }
     }
   }
@@ -402,7 +415,6 @@ void NuGraphInference::produce(art::Event& e)
   for (size_t i = 0; i < _decoderToolsVec.size(); i++) {
     _decoderToolsVec[i]->writeToEvent(e, idsmap, infer_output);
   }
-
 }
 
 DEFINE_ART_MODULE(NuGraphInference)

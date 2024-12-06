@@ -24,8 +24,8 @@
 #include "larrecodnn/ImagePatternAlgs/NuSonic/Triton/TritonClient.h"
 #include "larrecodnn/ImagePatternAlgs/NuSonic/Triton/TritonData.h"
 
-#include "larrecodnn/NuGraph/Tools/LoaderToolBase.h"
 #include "larrecodnn/NuGraph/Tools/DecoderToolBase.h"
+#include "larrecodnn/NuGraph/Tools/LoaderToolBase.h"
 
 #include <chrono>
 #include <fstream>
@@ -66,11 +66,15 @@ private:
   // decoder tools
   std::vector<std::unique_ptr<DecoderToolBase>> _decoderToolsVec;
 
-  template<class T> void setShapeAndToServer(lartriton::TritonData<triton::client::InferInput>& triton_input, vector<T>& vec, size_t batchSize) {
+  template <class T>
+  void setShapeAndToServer(lartriton::TritonData<triton::client::InferInput>& triton_input,
+                           vector<T>& vec,
+                           size_t batchSize)
+  {
     triton_input.setShape({static_cast<long int>(vec.size())});
-    triton_input.toServer( std::make_shared<lartriton::TritonInput<T>>(lartriton::TritonInput<T>(batchSize,vec))  );
+    triton_input.toServer(
+      std::make_shared<lartriton::TritonInput<T>>(lartriton::TritonInput<T>(batchSize, vec)));
   }
-
 };
 
 NuGraphInferenceSonicTriton::NuGraphInferenceSonicTriton(fhicl::ParameterSet const& p)
@@ -86,20 +90,18 @@ NuGraphInferenceSonicTriton::NuGraphInferenceSonicTriton(fhicl::ParameterSet con
   triton_client = std::make_unique<lartriton::TritonClient>(tritonPset);
 
   // Loader Tool
-  _loaderTool = art::make_tool<LoaderToolBase>( p.get<fhicl::ParameterSet>("LoaderTool") );
-  _loaderTool->setDebugAndPlanes(debug,planes);
+  _loaderTool = art::make_tool<LoaderToolBase>(p.get<fhicl::ParameterSet>("LoaderTool"));
+  _loaderTool->setDebugAndPlanes(debug, planes);
 
   // configure and construct Decoder Tools
   auto const tool_psets = p.get<fhicl::ParameterSet>("DecoderTools");
-  for (auto const &tool_pset_labels : tool_psets.get_pset_names())
-  {
+  for (auto const& tool_pset_labels : tool_psets.get_pset_names()) {
     std::cout << "decoder lablel: " << tool_pset_labels << std::endl;
     auto const tool_pset = tool_psets.get<fhicl::ParameterSet>(tool_pset_labels);
     _decoderToolsVec.push_back(art::make_tool<DecoderToolBase>(tool_pset));
-    _decoderToolsVec.back()->setDebugAndPlanes(debug,planes);
+    _decoderToolsVec.back()->setDebugAndPlanes(debug, planes);
     _decoderToolsVec.back()->declareProducts(producesCollector());
   }
-
 }
 
 void NuGraphInferenceSonicTriton::produce(art::Event& e)
@@ -111,7 +113,7 @@ void NuGraphInferenceSonicTriton::produce(art::Event& e)
   vector<art::Ptr<Hit>> hitlist;
   vector<vector<size_t>> idsmap;
   vector<NuGraphInput> graphinputs;
-  _loaderTool->loadData(e,hitlist,graphinputs,idsmap);
+  _loaderTool->loadData(e, hitlist, graphinputs, idsmap);
 
   if (debug) std::cout << "Hits size=" << hitlist.size() << std::endl;
   if (hitlist.size() < minHits) {
@@ -129,7 +131,7 @@ void NuGraphInferenceSonicTriton::produce(art::Event& e)
   //
   //Here the input should be sent to Triton
   triton_client->reset();
-  size_t batchSize = 1;//the code below assumes/has only been tested for batch size = 1
+  size_t batchSize = 1; //the code below assumes/has only been tested for batch size = 1
   triton_client->setBatchSize(batchSize); // set batch size
   //
   auto& inputs = triton_client->input();
@@ -139,8 +141,10 @@ void NuGraphInferenceSonicTriton::produce(art::Event& e)
     //
     for (auto& gi : graphinputs) {
       if (key != gi.input_name) continue;
-      if (gi.isInt) setShapeAndToServer(triton_input, gi.input_int32_vec,batchSize);
-      else setShapeAndToServer(triton_input, gi.input_float_vec, batchSize);
+      if (gi.isInt)
+        setShapeAndToServer(triton_input, gi.input_int32_vec, batchSize);
+      else
+        setShapeAndToServer(triton_input, gi.input_float_vec, batchSize);
     }
   }
   // ~~~~ Send inference request
@@ -161,7 +165,7 @@ void NuGraphInferenceSonicTriton::produce(art::Event& e)
     std::vector<float> out_data;
     out_data.reserve(n_elements);
     out_data.insert(out_data.end(), prob[0].begin(), prob[0].end());
-    infer_output.push_back(NuGraphOutput(pair.first,out_data));
+    infer_output.push_back(NuGraphOutput(pair.first, out_data));
   }
 
   // Write the outputs to the output root file

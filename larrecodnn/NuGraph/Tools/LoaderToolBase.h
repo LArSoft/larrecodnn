@@ -5,24 +5,26 @@
 #include "art/Utilities/ToolMacros.h"
 #include "art/Utilities/make_tool.h"
 
-#include "fhiclcpp/ParameterSet.h"
-#include "art/Framework/Principal/Event.h"
 #include "art/Framework/Core/EDProducer.h"
+#include "art/Framework/Principal/Event.h"
+#include "fhiclcpp/ParameterSet.h"
 
 #include "lardataobj/RecoBase/Hit.h"
 
-#include <vector>
 #include <string>
 #include <utility>
+#include <vector>
 
-using std::vector;
 using std::string;
+using std::vector;
 
 struct NuGraphInput {
-  NuGraphInput(string s, vector<int32_t> vi):
-    input_name(s),isInt(true),input_int32_vec(vi),input_float_vec(vector<float>()){}
-  NuGraphInput(string s, vector<float> vf):
-    input_name(s),isInt(false),input_int32_vec(vector<int32_t>()),input_float_vec(vf){}
+  NuGraphInput(string s, vector<int32_t> vi)
+    : input_name(s), isInt(true), input_int32_vec(vi), input_float_vec(vector<float>())
+  {}
+  NuGraphInput(string s, vector<float> vf)
+    : input_name(s), isInt(false), input_int32_vec(vector<int32_t>()), input_float_vec(vf)
+  {}
   string input_name;
   bool isInt;
   vector<int32_t> input_int32_vec;
@@ -32,12 +34,11 @@ struct NuGraphInput {
 class LoaderToolBase {
 
 public:
-
   /**
    *  @brief  Virtual Destructor
    */
   virtual ~LoaderToolBase() noexcept = default;
-    
+
   /**
    *  @brief Interface for configuring the particular algorithm tool
    *
@@ -50,9 +51,16 @@ public:
    *
    * @param art::Event event record, list of input, idsmap
    */
-  virtual void loadData(art::Event& e, vector<art::Ptr<recob::Hit>>& hitlist, vector<NuGraphInput>& inputs, vector<vector<size_t> >& idsmap) = 0;
+  virtual void loadData(art::Event& e,
+                        vector<art::Ptr<recob::Hit>>& hitlist,
+                        vector<NuGraphInput>& inputs,
+                        vector<vector<size_t>>& idsmap) = 0;
 
-  void setDebugAndPlanes(bool d, vector<std::string>& p) { debug = d; planes = p;}
+  void setDebugAndPlanes(bool d, vector<std::string>& p)
+  {
+    debug = d;
+    planes = p;
+  }
 
 protected:
   bool debug;

@@ -22,8 +22,8 @@
 #include "lardataobj/AnalysisBase/MVAOutput.h"
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/Vertex.h"
-#include "larrecodnn/NuGraph/Tools/LoaderToolBase.h"
 #include "larrecodnn/NuGraph/Tools/DecoderToolBase.h"
+#include "larrecodnn/NuGraph/Tools/LoaderToolBase.h"
 
 #include <chrono>
 #include <fstream>
@@ -100,24 +100,22 @@ NuGraphInferenceTriton::NuGraphInferenceTriton(fhicl::ParameterSet const& p)
   ssl_private_key = tritonPset.get<std::string>("sslPrivateKey", "");
   ssl_certificate_chain = tritonPset.get<std::string>("sslCertificateChain", "");
   verbose = tritonPset.get<bool>("verbose", "false");
-  model_version = tritonPset.get<std::string>("modelVersion","");
+  model_version = tritonPset.get<std::string>("modelVersion", "");
   client_timeout = tritonPset.get<unsigned>("timeout", 0);
 
   // Loader Tool
-  _loaderTool = art::make_tool<LoaderToolBase>( p.get<fhicl::ParameterSet>("LoaderTool") );
-  _loaderTool->setDebugAndPlanes(debug,planes);
+  _loaderTool = art::make_tool<LoaderToolBase>(p.get<fhicl::ParameterSet>("LoaderTool"));
+  _loaderTool->setDebugAndPlanes(debug, planes);
 
   // configure and construct Decoder Tools
   auto const tool_psets = p.get<fhicl::ParameterSet>("DecoderTools");
-  for (auto const &tool_pset_labels : tool_psets.get_pset_names())
-  {
+  for (auto const& tool_pset_labels : tool_psets.get_pset_names()) {
     std::cout << "decoder lablel: " << tool_pset_labels << std::endl;
     auto const tool_pset = tool_psets.get<fhicl::ParameterSet>(tool_pset_labels);
     _decoderToolsVec.push_back(art::make_tool<DecoderToolBase>(tool_pset));
-    _decoderToolsVec.back()->setDebugAndPlanes(debug,planes);
+    _decoderToolsVec.back()->setDebugAndPlanes(debug, planes);
     _decoderToolsVec.back()->declareProducts(producesCollector());
   }
-
 }
 
 void NuGraphInferenceTriton::produce(art::Event& e)
@@ -129,7 +127,7 @@ void NuGraphInferenceTriton::produce(art::Event& e)
   vector<art::Ptr<Hit>> hitlist;
   vector<vector<size_t>> idsmap;
   vector<NuGraphInput> graphinputs;
-  _loaderTool->loadData(e,hitlist,graphinputs,idsmap);
+  _loaderTool->loadData(e, hitlist, graphinputs, idsmap);
 
   if (debug) std::cout << "Hits size=" << hitlist.size() << std::endl;
   if (hitlist.size() < minHits) {
@@ -154,16 +152,26 @@ void NuGraphInferenceTriton::produce(art::Event& e)
   const vector<int32_t>* spacepoint_table_hit_id_v_data = 0;
   const vector<int32_t>* spacepoint_table_hit_id_y_data = 0;
   for (const auto& gi : graphinputs) {
-    if (gi.input_name == "hit_table_hit_id") hit_table_hit_id_data = &gi.input_int32_vec;
-    else if (gi.input_name == "hit_table_local_plane") hit_table_local_plane_data = &gi.input_int32_vec;
-    else if (gi.input_name == "hit_table_local_time") hit_table_local_time_data = &gi.input_float_vec;
-    else if (gi.input_name == "hit_table_local_wire") hit_table_local_wire_data = &gi.input_int32_vec;
-    else if (gi.input_name == "hit_table_integral") hit_table_integral_data = &gi.input_float_vec;
-    else if (gi.input_name == "hit_table_rms") hit_table_rms_data = &gi.input_float_vec;
-    else if (gi.input_name == "spacepoint_table_spacepoint_id") spacepoint_table_spacepoint_id_data = &gi.input_int32_vec;
-    else if (gi.input_name == "spacepoint_table_hit_id_u") spacepoint_table_hit_id_u_data = &gi.input_int32_vec;
-    else if (gi.input_name == "spacepoint_table_hit_id_v") spacepoint_table_hit_id_v_data = &gi.input_int32_vec;
-    else if (gi.input_name == "spacepoint_table_hit_id_y") spacepoint_table_hit_id_y_data = &gi.input_int32_vec;
+    if (gi.input_name == "hit_table_hit_id")
+      hit_table_hit_id_data = &gi.input_int32_vec;
+    else if (gi.input_name == "hit_table_local_plane")
+      hit_table_local_plane_data = &gi.input_int32_vec;
+    else if (gi.input_name == "hit_table_local_time")
+      hit_table_local_time_data = &gi.input_float_vec;
+    else if (gi.input_name == "hit_table_local_wire")
+      hit_table_local_wire_data = &gi.input_int32_vec;
+    else if (gi.input_name == "hit_table_integral")
+      hit_table_integral_data = &gi.input_float_vec;
+    else if (gi.input_name == "hit_table_rms")
+      hit_table_rms_data = &gi.input_float_vec;
+    else if (gi.input_name == "spacepoint_table_spacepoint_id")
+      spacepoint_table_spacepoint_id_data = &gi.input_int32_vec;
+    else if (gi.input_name == "spacepoint_table_hit_id_u")
+      spacepoint_table_hit_id_u_data = &gi.input_int32_vec;
+    else if (gi.input_name == "spacepoint_table_hit_id_v")
+      spacepoint_table_hit_id_v_data = &gi.input_int32_vec;
+    else if (gi.input_name == "spacepoint_table_hit_id_y")
+      spacepoint_table_hit_id_y_data = &gi.input_int32_vec;
   }
 
   //Here the input should be sent to Triton
@@ -189,13 +197,18 @@ void NuGraphInferenceTriton::produce(art::Event& e)
   // Run with the same name to ensure cached channel is not used
   int numRuns = test_use_cached_channel ? 2 : 1;
   for (int i = 0; i < numRuns; ++i) {
-    FAIL_IF_ERR(
-      tc::InferenceServerGrpcClient::Create(
-        &client, inference_url, verbose, inference_ssl, ssl_options, tc::KeepAliveOptions(), use_cached_channel),
-      err);
+    FAIL_IF_ERR(tc::InferenceServerGrpcClient::Create(&client,
+                                                      inference_url,
+                                                      verbose,
+                                                      inference_ssl,
+                                                      ssl_options,
+                                                      tc::KeepAliveOptions(),
+                                                      use_cached_channel),
+                err);
 
     std::vector<int64_t> hit_table_shape{int64_t(hit_table_hit_id_data->size())};
-    std::vector<int64_t> spacepoint_table_shape{int64_t(spacepoint_table_spacepoint_id_data->size())};
+    std::vector<int64_t> spacepoint_table_shape{
+      int64_t(spacepoint_table_spacepoint_id_data->size())};
 
     // Initialize the inputs with the data.
     tc::InferInput* hit_table_hit_id;
@@ -274,47 +287,54 @@ void NuGraphInferenceTriton::produce(art::Event& e)
     std::shared_ptr<tc::InferInput> spacepoint_table_hit_id_y_ptr;
     spacepoint_table_hit_id_y_ptr.reset(spacepoint_table_hit_id_y);
 
-    FAIL_IF_ERR(hit_table_hit_id_ptr->AppendRaw(reinterpret_cast<const uint8_t*>(hit_table_hit_id_data->data()),
-						hit_table_hit_id_data->size() * sizeof(int32_t)),
-		"unable to set data for hit_table_hit_id");
+    FAIL_IF_ERR(hit_table_hit_id_ptr->AppendRaw(
+                  reinterpret_cast<const uint8_t*>(hit_table_hit_id_data->data()),
+                  hit_table_hit_id_data->size() * sizeof(int32_t)),
+                "unable to set data for hit_table_hit_id");
 
-    FAIL_IF_ERR(hit_table_local_plane_ptr->AppendRaw(reinterpret_cast<const uint8_t*>(hit_table_local_plane_data->data()),
-						     hit_table_local_plane_data->size() * sizeof(int32_t)),
+    FAIL_IF_ERR(hit_table_local_plane_ptr->AppendRaw(
+                  reinterpret_cast<const uint8_t*>(hit_table_local_plane_data->data()),
+                  hit_table_local_plane_data->size() * sizeof(int32_t)),
                 "unable to set data for hit_table_local_plane");
 
-    FAIL_IF_ERR(
-      hit_table_local_time_ptr->AppendRaw(reinterpret_cast<const uint8_t*>(hit_table_local_time_data->data()),
-                                          hit_table_local_time_data->size() * sizeof(float)),
-      "unable to set data for hit_table_local_time");
+    FAIL_IF_ERR(hit_table_local_time_ptr->AppendRaw(
+                  reinterpret_cast<const uint8_t*>(hit_table_local_time_data->data()),
+                  hit_table_local_time_data->size() * sizeof(float)),
+                "unable to set data for hit_table_local_time");
+
+    FAIL_IF_ERR(hit_table_local_wire_ptr->AppendRaw(
+                  reinterpret_cast<const uint8_t*>(hit_table_local_wire_data->data()),
+                  hit_table_local_wire_data->size() * sizeof(int32_t)),
+                "unable to set data for hit_table_local_wire");
+
+    FAIL_IF_ERR(hit_table_integral_ptr->AppendRaw(
+                  reinterpret_cast<const uint8_t*>(hit_table_integral_data->data()),
+                  hit_table_integral_data->size() * sizeof(float)),
+                "unable to set data for hit_table_integral");
 
     FAIL_IF_ERR(
-      hit_table_local_wire_ptr->AppendRaw(reinterpret_cast<const uint8_t*>(hit_table_local_wire_data->data()),
-                                          hit_table_local_wire_data->size() * sizeof(int32_t)),
-      "unable to set data for hit_table_local_wire");
+      hit_table_rms_ptr->AppendRaw(reinterpret_cast<const uint8_t*>(hit_table_rms_data->data()),
+                                   hit_table_rms_data->size() * sizeof(float)),
+      "unable to set data for hit_table_rms");
 
-    FAIL_IF_ERR(
-      hit_table_integral_ptr->AppendRaw(reinterpret_cast<const uint8_t*>(hit_table_integral_data->data()),
-                                        hit_table_integral_data->size() * sizeof(float)),
-      "unable to set data for hit_table_integral");
-
-    FAIL_IF_ERR(hit_table_rms_ptr->AppendRaw(reinterpret_cast<const uint8_t*>(hit_table_rms_data->data()),
-                                             hit_table_rms_data->size() * sizeof(float)),
-                "unable to set data for hit_table_rms");
-
-    FAIL_IF_ERR(spacepoint_table_spacepoint_id_ptr->AppendRaw(reinterpret_cast<const uint8_t*>(spacepoint_table_spacepoint_id_data->data()),
-							      spacepoint_table_spacepoint_id_data->size() * sizeof(int32_t)),
+    FAIL_IF_ERR(spacepoint_table_spacepoint_id_ptr->AppendRaw(
+                  reinterpret_cast<const uint8_t*>(spacepoint_table_spacepoint_id_data->data()),
+                  spacepoint_table_spacepoint_id_data->size() * sizeof(int32_t)),
                 "unable to set data for spacepoint_table_spacepoint_id");
 
-    FAIL_IF_ERR(spacepoint_table_hit_id_u_ptr->AppendRaw(reinterpret_cast<const uint8_t*>(spacepoint_table_hit_id_u_data->data()),
-							 spacepoint_table_hit_id_u_data->size() * sizeof(int32_t)),
+    FAIL_IF_ERR(spacepoint_table_hit_id_u_ptr->AppendRaw(
+                  reinterpret_cast<const uint8_t*>(spacepoint_table_hit_id_u_data->data()),
+                  spacepoint_table_hit_id_u_data->size() * sizeof(int32_t)),
                 "unable to set data for spacepoint_table_hit_id_u");
 
-    FAIL_IF_ERR(spacepoint_table_hit_id_v_ptr->AppendRaw(reinterpret_cast<const uint8_t*>(spacepoint_table_hit_id_v_data->data()),
-							 spacepoint_table_hit_id_v_data->size() * sizeof(int32_t)),
+    FAIL_IF_ERR(spacepoint_table_hit_id_v_ptr->AppendRaw(
+                  reinterpret_cast<const uint8_t*>(spacepoint_table_hit_id_v_data->data()),
+                  spacepoint_table_hit_id_v_data->size() * sizeof(int32_t)),
                 "unable to set data for spacepoint_table_hit_id_v");
 
-    FAIL_IF_ERR(spacepoint_table_hit_id_y_ptr->AppendRaw(reinterpret_cast<const uint8_t*>(spacepoint_table_hit_id_y_data->data()),
-							 spacepoint_table_hit_id_y_data->size() * sizeof(int32_t)),
+    FAIL_IF_ERR(spacepoint_table_hit_id_y_ptr->AppendRaw(
+                  reinterpret_cast<const uint8_t*>(spacepoint_table_hit_id_y_data->data()),
+                  spacepoint_table_hit_id_y_data->size() * sizeof(int32_t)),
                 "unable to set data for spacepoint_table_hit_id_y");
 
     // Generate the outputs to be requested.
@@ -393,14 +413,16 @@ void NuGraphInferenceTriton::produce(art::Event& e)
     // Get pointers to the result returned and write to the event
     //
     vector<NuGraphOutput> infer_output;
-    vector<string> outnames = {"x_semantic_u","x_semantic_v","x_semantic_y","x_filter_u","x_filter_v","x_filter_y"};
+    vector<string> outnames = {
+      "x_semantic_u", "x_semantic_v", "x_semantic_y", "x_filter_u", "x_filter_v", "x_filter_y"};
     for (const auto& name : outnames) {
       const float* _data;
       size_t _byte_size;
-      FAIL_IF_ERR(results_ptr->RawData(name, (const uint8_t**)& _data, &_byte_size),"unable to get result data for "+name);
+      FAIL_IF_ERR(results_ptr->RawData(name, (const uint8_t**)&_data, &_byte_size),
+                  "unable to get result data for " + name);
       size_t n_elements = _byte_size / sizeof(float);
-      std::vector<float> out_data(_data, _data+n_elements);
-      infer_output.push_back(NuGraphOutput(name,out_data));
+      std::vector<float> out_data(_data, _data + n_elements);
+      infer_output.push_back(NuGraphOutput(name, out_data));
     }
 
     // Write the outputs
