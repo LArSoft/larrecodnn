@@ -9,6 +9,7 @@
 using anab::FeatureVector;
 using anab::MVADescription;
 
+// fixme:this only works for 5 categories and should be extended to different sizes. to do: allow for variable number of classes
 class SemanticDecoder : public DecoderToolBase
 {
 
@@ -36,8 +37,13 @@ public:
   /**
    * @brief declareProducts function
    *
+   * @param art::ProducesCollector
    */
-  std::pair<DecoderType,std::string> declareProducts() override { return std::make_pair(Semantic5,"semantic"); };
+  void declareProducts(art::ProducesCollector& collector) override
+  {
+    collector.produces<vector<FeatureVector<5>>>(instancename);
+    collector.produces<MVADescription<5>>(instancename);
+  }
 
   /**
    * @brief writeEmptyToEvent function
@@ -63,8 +69,6 @@ SemanticDecoder::SemanticDecoder(const fhicl::ParameterSet &p)
   configure(p);
 }
 
-// fixme:this only works for 5 categories and should be extended to different sizes
-// to do: allow for variable number of classes
 void SemanticDecoder::configure(const fhicl::ParameterSet& p) {
  DecoderToolBase::configure(p);
  categories = p.get<std::vector<std::string>>("categories");

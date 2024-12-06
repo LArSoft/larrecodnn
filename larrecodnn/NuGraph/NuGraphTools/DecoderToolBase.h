@@ -43,15 +43,11 @@ public:
     };
 
     /**
-     *  @brief Type of decoder, used for declaring what is produced
-     */
-    enum DecoderType { unset=0, Filter=1, Semantic5=2, Vertex=3};
-
-    /**
      * @brief declareProducts function
      *
+     * @param art::ProducesCollector
      */
-    virtual std::pair<DecoderType,std::string> declareProducts() = 0;
+    virtual void declareProducts(art::ProducesCollector&) = 0;
 
     /**
      * @brief writeEmptyToEvent function

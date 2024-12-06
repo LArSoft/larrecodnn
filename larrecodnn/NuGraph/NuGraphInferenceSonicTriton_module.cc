@@ -54,13 +54,6 @@ public:
   // Required functions.
   void produce(art::Event& e) override;
 
-  void declareProduceFilter(const std::string label) { produces<vector<FeatureVector<1>>>(label); }
-  void declareProduceSemantic5(const std::string label) {
-    produces<vector<FeatureVector<5>>>(label);
-    produces<MVADescription<5>>(label);
-  }
-  void declareProduceVertex(const std::string label) {produces<vector<recob::Vertex>>(label);}
-
 private:
   size_t minHits;
   bool debug;
@@ -104,25 +97,9 @@ NuGraphInferenceSonicTriton::NuGraphInferenceSonicTriton(fhicl::ParameterSet con
     auto const tool_pset = tool_psets.get<fhicl::ParameterSet>(tool_pset_labels);
     _decoderToolsVec.push_back(art::make_tool<DecoderToolBase>(tool_pset));
     _decoderToolsVec.back()->setDebugAndPlanes(debug,planes);
+    _decoderToolsVec.back()->declareProducts(producesCollector());
   }
 
-  for (size_t i = 0; i < _decoderToolsVec.size(); i++) {
-    auto declpair = _decoderToolsVec[i]->declareProducts();
-    std::string lbl = declpair.second;
-    switch(declpair.first) {
-    case DecoderToolBase::Filter:
-      declareProduceFilter(lbl);
-      break;
-    case DecoderToolBase::Semantic5:
-      declareProduceSemantic5(lbl);
-      break;
-    case DecoderToolBase::Vertex:
-      declareProduceVertex(lbl);
-      break;
-    default:
-      std::cout << "NuGraph decoder not supported -- please implement." << std::endl;
-    }
-  }
 }
 
 void NuGraphInferenceSonicTriton::produce(art::Event& e)

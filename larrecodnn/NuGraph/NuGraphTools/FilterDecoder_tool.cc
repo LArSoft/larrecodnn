@@ -36,8 +36,12 @@ public:
   /**
    * @brief declareProducts function
    *
+   * @param art::ProducesCollector
    */
-  std::pair<DecoderType,std::string> declareProducts() override { return std::make_pair(Filter,"filter"); };
+  void declareProducts(art::ProducesCollector& collector) override
+  {
+    collector.produces<vector<FeatureVector<1>>>(instancename);
+  }
 
   /**
    * @brief writeEmptyToEvent function
