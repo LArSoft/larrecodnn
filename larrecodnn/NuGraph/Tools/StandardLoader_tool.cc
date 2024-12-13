@@ -1,6 +1,3 @@
-#ifndef STANDARDLOADER_CXX
-#define STANDARDLOADER_CXX
-
 #include "LoaderToolBase.h"
 
 #include "canvas/Persistency/Common/FindManyP.h"
@@ -25,13 +22,6 @@ public:
   virtual ~StandardLoader() noexcept = default;
 
   /**
-   *  @brief Interface for configuring the particular algorithm tool
-   *
-   *  @param ParameterSet  The input set of parameters for configuration
-   */
-  void configure(const fhicl::ParameterSet&);
-
-  /**
    * @brief loadData function
    *
    * @param art::Event event record, list of input, idsmap
@@ -47,15 +37,8 @@ private:
 };
 
 StandardLoader::StandardLoader(const fhicl::ParameterSet& p)
-{
-  configure(p);
-}
-
-void StandardLoader::configure(const fhicl::ParameterSet& p)
-{
-  hitInput = p.get<art::InputTag>("hitInput");
-  spsInput = p.get<art::InputTag>("spsInput");
-}
+  : hitInput{p.get<art::InputTag>("hitInput")}, spsInput{p.get<art::InputTag>("spsInput")}
+{}
 
 void StandardLoader::loadData(art::Event& e,
                               vector<art::Ptr<recob::Hit>>& hitlist,
@@ -118,19 +101,16 @@ void StandardLoader::loadData(art::Event& e,
     }
   }
 
-  inputs.push_back(NuGraphInput("hit_table_hit_id", hit_table_hit_id_data));
-  inputs.push_back(NuGraphInput("hit_table_local_plane", hit_table_local_plane_data));
-  inputs.push_back(NuGraphInput("hit_table_local_time", hit_table_local_time_data));
-  inputs.push_back(NuGraphInput("hit_table_local_wire", hit_table_local_wire_data));
-  inputs.push_back(NuGraphInput("hit_table_integral", hit_table_integral_data));
-  inputs.push_back(NuGraphInput("hit_table_rms", hit_table_rms_data));
+  inputs.emplace_back("hit_table_hit_id", hit_table_hit_id_data);
+  inputs.emplace_back("hit_table_local_plane", hit_table_local_plane_data);
+  inputs.emplace_back("hit_table_local_time", hit_table_local_time_data);
+  inputs.emplace_back("hit_table_local_wire", hit_table_local_wire_data);
+  inputs.emplace_back("hit_table_integral", hit_table_integral_data);
+  inputs.emplace_back("hit_table_rms", hit_table_rms_data);
 
-  inputs.push_back(
-    NuGraphInput("spacepoint_table_spacepoint_id", spacepoint_table_spacepoint_id_data));
-  inputs.push_back(NuGraphInput("spacepoint_table_hit_id_u", spacepoint_table_hit_id_u_data));
-  inputs.push_back(NuGraphInput("spacepoint_table_hit_id_v", spacepoint_table_hit_id_v_data));
-  inputs.push_back(NuGraphInput("spacepoint_table_hit_id_y", spacepoint_table_hit_id_y_data));
+  inputs.emplace_back("spacepoint_table_spacepoint_id", spacepoint_table_spacepoint_id_data);
+  inputs.emplace_back("spacepoint_table_hit_id_u", spacepoint_table_hit_id_u_data);
+  inputs.emplace_back("spacepoint_table_hit_id_v", spacepoint_table_hit_id_v_data);
+  inputs.emplace_back("spacepoint_table_hit_id_y", spacepoint_table_hit_id_y_data);
 }
 DEFINE_ART_CLASS_TOOL(StandardLoader)
-
-#endif

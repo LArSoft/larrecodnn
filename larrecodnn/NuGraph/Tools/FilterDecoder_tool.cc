@@ -1,6 +1,3 @@
-#ifndef FILTERDECODER_CXX
-#define FILTERDECODER_CXX
-
 #include "DecoderToolBase.h"
 
 #include "lardataobj/AnalysisBase/MVAOutput.h"
@@ -23,13 +20,6 @@ public:
    *  @brief  Virtual Destructor
    */
   virtual ~FilterDecoder() noexcept = default;
-
-  /**
-   *  @brief Interface for configuring the particular algorithm tool
-   *
-   *  @param ParameterSet  The input set of parameters for configuration
-   */
-  void configure(const fhicl::ParameterSet& p) { DecoderToolBase::configure(p); }
 
   /**
    * @brief declareProducts function
@@ -58,10 +48,7 @@ public:
                     const vector<NuGraphOutput>& infer_output) override;
 };
 
-FilterDecoder::FilterDecoder(const fhicl::ParameterSet& p)
-{
-  configure(p);
-}
+FilterDecoder::FilterDecoder(const fhicl::ParameterSet& p) : DecoderToolBase{p} {}
 
 void FilterDecoder::writeEmptyToEvent(art::Event& e, const vector<vector<size_t>>& idsmap)
 {
@@ -69,8 +56,8 @@ void FilterDecoder::writeEmptyToEvent(art::Event& e, const vector<vector<size_t>
   size_t size = 0;
   for (auto& v : idsmap)
     size += v.size();
-  std::unique_ptr<vector<FeatureVector<1>>> filtcol(
-    new vector<FeatureVector<1>>(size, FeatureVector<1>(std::array<float, 1>({-1.}))));
+  auto filtcol =
+    std::make_unique<vector<FeatureVector<1>>>(size, FeatureVector<1>(std::array<float, 1>({-1.})));
   e.put(std::move(filtcol), instancename);
   //
 }
@@ -83,8 +70,8 @@ void FilterDecoder::writeToEvent(art::Event& e,
   size_t size = 0;
   for (auto& v : idsmap)
     size += v.size();
-  std::unique_ptr<vector<FeatureVector<1>>> filtcol(
-    new vector<FeatureVector<1>>(size, FeatureVector<1>(std::array<float, 1>({-1.}))));
+  auto filtcol =
+    std::make_unique<vector<FeatureVector<1>>>(size, FeatureVector<1>(std::array<float, 1>({-1.})));
   //
   for (size_t p = 0; p < planes.size(); p++) {
     //
@@ -112,5 +99,3 @@ void FilterDecoder::writeToEvent(art::Event& e,
 }
 
 DEFINE_ART_CLASS_TOOL(FilterDecoder)
-
-#endif

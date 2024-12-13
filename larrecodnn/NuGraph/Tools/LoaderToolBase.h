@@ -20,10 +20,10 @@ using std::vector;
 
 struct NuGraphInput {
   NuGraphInput(string s, vector<int32_t> vi)
-    : input_name(s), isInt(true), input_int32_vec(vi), input_float_vec(vector<float>())
+    : input_name(s), isInt(true), input_int32_vec(std::move(vi))
   {}
   NuGraphInput(string s, vector<float> vf)
-    : input_name(s), isInt(false), input_int32_vec(vector<int32_t>()), input_float_vec(vf)
+    : input_name(s), isInt(false), input_float_vec(std::move(vf))
   {}
   string input_name;
   bool isInt;
@@ -38,13 +38,6 @@ public:
    *  @brief  Virtual Destructor
    */
   virtual ~LoaderToolBase() noexcept = default;
-
-  /**
-   *  @brief Interface for configuring the particular algorithm tool
-   *
-   *  @param ParameterSet  The input set of parameters for configuration
-   */
-  void configure(const fhicl::ParameterSet&){};
 
   /**
    * @brief loadData virtual function

@@ -141,16 +141,16 @@ void NuGraphInferenceTriton::produce(art::Event& e)
   //
   // Triton-specific section
   //
-  const vector<int32_t>* hit_table_hit_id_data = 0;
-  const vector<int32_t>* hit_table_local_plane_data = 0;
-  const vector<float>* hit_table_local_time_data = 0;
-  const vector<int32_t>* hit_table_local_wire_data = 0;
-  const vector<float>* hit_table_integral_data = 0;
-  const vector<float>* hit_table_rms_data = 0;
-  const vector<int32_t>* spacepoint_table_spacepoint_id_data = 0;
-  const vector<int32_t>* spacepoint_table_hit_id_u_data = 0;
-  const vector<int32_t>* spacepoint_table_hit_id_v_data = 0;
-  const vector<int32_t>* spacepoint_table_hit_id_y_data = 0;
+  const vector<int32_t>* hit_table_hit_id_data = nullptr;
+  const vector<int32_t>* hit_table_local_plane_data = nullptr;
+  const vector<float>* hit_table_local_time_data = nullptr;
+  const vector<int32_t>* hit_table_local_wire_data = nullptr;
+  const vector<float>* hit_table_integral_data = nullptr;
+  const vector<float>* hit_table_rms_data = nullptr;
+  const vector<int32_t>* spacepoint_table_spacepoint_id_data = nullptr;
+  const vector<int32_t>* spacepoint_table_hit_id_u_data = nullptr;
+  const vector<int32_t>* spacepoint_table_hit_id_v_data = nullptr;
+  const vector<int32_t>* spacepoint_table_hit_id_y_data = nullptr;
   for (const auto& gi : graphinputs) {
     if (gi.input_name == "hit_table_hit_id")
       hit_table_hit_id_data = &gi.input_int32_vec;

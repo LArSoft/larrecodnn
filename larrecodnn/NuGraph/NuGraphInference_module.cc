@@ -149,15 +149,15 @@ void NuGraphInference::produce(art::Event& e)
   //
   // libTorch-specific section: requires extracting inputs, create graph, run inference
   //
-  const vector<int32_t>* spids = 0;
-  const vector<int32_t>* hitids_u = 0;
-  const vector<int32_t>* hitids_v = 0;
-  const vector<int32_t>* hitids_y = 0;
-  const vector<int32_t>* hit_plane = 0;
-  const vector<float>* hit_time = 0;
-  const vector<int32_t>* hit_wire = 0;
-  const vector<float>* hit_integral = 0;
-  const vector<float>* hit_rms = 0;
+  const vector<int32_t>* spids = nullptr;
+  const vector<int32_t>* hitids_u = nullptr;
+  const vector<int32_t>* hitids_v = nullptr;
+  const vector<int32_t>* hitids_y = nullptr;
+  const vector<int32_t>* hit_plane = nullptr;
+  const vector<float>* hit_time = nullptr;
+  const vector<int32_t>* hit_wire = nullptr;
+  const vector<float>* hit_integral = nullptr;
+  const vector<float>* hit_rms = nullptr;
   for (const auto& gi : graphinputs) {
     if (gi.input_name == "spacepoint_table_spacepoint_id")
       spids = &gi.input_int32_vec;

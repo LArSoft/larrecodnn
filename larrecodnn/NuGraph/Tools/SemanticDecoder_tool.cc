@@ -1,6 +1,3 @@
-#ifndef SEMANTICDECODER_CXX
-#define SEMANTICDECODER_CXX
-
 #include "DecoderToolBase.h"
 
 #include "lardataobj/AnalysisBase/MVAOutput.h"
@@ -24,13 +21,6 @@ public:
    *  @brief  Virtual Destructor
    */
   virtual ~SemanticDecoder() noexcept = default;
-
-  /**
-   *  @brief Interface for configuring the particular algorithm tool
-   *
-   *  @param ParameterSet  The input set of parameters for configuration
-   */
-  void configure(const fhicl::ParameterSet&);
 
   /**
    * @brief declareProducts function
@@ -65,22 +55,15 @@ private:
 };
 
 SemanticDecoder::SemanticDecoder(const fhicl::ParameterSet& p)
-{
-  configure(p);
-}
-
-void SemanticDecoder::configure(const fhicl::ParameterSet& p)
-{
-  DecoderToolBase::configure(p);
-  categories = p.get<std::vector<std::string>>("categories");
-  hitInput = p.get<art::InputTag>("hitInput");
-}
+  : DecoderToolBase(p)
+  , categories{p.get<std::vector<std::string>>("categories")}
+  , hitInput{p.get<art::InputTag>("hitInput")}
+{}
 
 void SemanticDecoder::writeEmptyToEvent(art::Event& e, const vector<vector<size_t>>& idsmap)
 {
   //
-  std::unique_ptr<MVADescription<5>> semtdes(
-    new MVADescription<5>(hitInput.label(), instancename, categories));
+  auto semtdes = std::make_unique<MVADescription<5>>(hitInput.label(), instancename, categories);
   e.put(std::move(semtdes), instancename);
   //
   size_t size = 0;
@@ -88,8 +71,7 @@ void SemanticDecoder::writeEmptyToEvent(art::Event& e, const vector<vector<size_
     size += v.size();
   std::array<float, 5> arr;
   std::fill(arr.begin(), arr.end(), -1.);
-  std::unique_ptr<vector<FeatureVector<5>>> semtcol(
-    new vector<FeatureVector<5>>(size, FeatureVector<5>(arr)));
+  auto semtcol = std::make_unique<vector<FeatureVector<5>>>(size, FeatureVector<5>(arr));
   e.put(std::move(semtcol), instancename);
   //
 }
@@ -99,8 +81,7 @@ void SemanticDecoder::writeToEvent(art::Event& e,
                                    const vector<NuGraphOutput>& infer_output)
 {
   //
-  std::unique_ptr<MVADescription<5>> semtdes(
-    new MVADescription<5>(hitInput.label(), instancename, categories));
+  auto semtdes = std::make_unique<MVADescription<5>>(hitInput.label(), instancename, categories);
   e.put(std::move(semtdes), instancename);
   //
   size_t size = 0;
@@ -108,8 +89,7 @@ void SemanticDecoder::writeToEvent(art::Event& e,
     size += v.size();
   std::array<float, 5> arr;
   std::fill(arr.begin(), arr.end(), -1.);
-  std::unique_ptr<vector<FeatureVector<5>>> semtcol(
-    new vector<FeatureVector<5>>(size, FeatureVector<5>(arr)));
+  auto semtcol = std::make_unique<vector<FeatureVector<5>>>(size, FeatureVector<5>(arr));
 
   size_t n_cols = categories.size();
   for (size_t p = 0; p < planes.size(); p++) {
@@ -144,5 +124,3 @@ void SemanticDecoder::writeToEvent(art::Event& e,
 }
 
 DEFINE_ART_CLASS_TOOL(SemanticDecoder)
-
-#endif

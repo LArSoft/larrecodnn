@@ -17,7 +17,7 @@ using std::string;
 using std::vector;
 
 struct NuGraphOutput {
-  NuGraphOutput(string s, vector<float> vf) : output_name(s), output_vec(vf) {}
+  NuGraphOutput(string s, vector<float> vf) : output_name(s), output_vec(std::move(vf)) {}
   string output_name;
   vector<float> output_vec;
 };
@@ -31,15 +31,14 @@ public:
   virtual ~DecoderToolBase() noexcept = default;
 
   /**
-     *  @brief Interface for configuring the particular algorithm tool
+     *  @brief Construcutor
      *
      *  @param ParameterSet  The input set of parameters for configuration
      */
-  void configure(const fhicl::ParameterSet& p)
-  {
-    instancename = p.get<std::string>("instanceName", "filter");
-    outputname = p.get<std::string>("outputName", "x_filter_");
-  };
+  DecoderToolBase(fhicl::ParameterSet const& p)
+    : instancename{p.get<std::string>("instanceName", "filter")}
+    , outputname{p.get<std::string>("outputName", "x_filter_")}
+  {}
 
   /**
      * @brief declareProducts function

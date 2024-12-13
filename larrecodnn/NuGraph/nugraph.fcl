@@ -29,7 +29,7 @@ TritonConfig: {
     outputs: []
 }
 
-NuGraph: {
+NuGraphLibTorch: {
    @table::NuGraphCommon
    avgs_u: [389.00632, 173.42017, 144.42065, 4.5582113]
    avgs_v: [3.6914261e+02, 1.7347592e+02, 8.5748262e+08, 4.4525051e+00]
@@ -41,6 +41,7 @@ NuGraph: {
    modelFileName: "model.pt"
    module_type: "NuGraphInference"
 }
+NuGraph: @local::NuGraphLibTorch
 
 NuGraphTriton: { 
    @table::NuGraphCommon

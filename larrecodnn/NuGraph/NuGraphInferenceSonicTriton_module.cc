@@ -159,13 +159,10 @@ void NuGraphInferenceSonicTriton::produce(art::Event& e)
   // Get pointers to the result returned and write to the event
   //
   vector<NuGraphOutput> infer_output;
-  for (const auto& pair : infer_result) {
-    const auto& prob = pair.second.fromServer<float>();
-    size_t n_elements = std::distance(prob[0].begin(), prob[0].end());
-    std::vector<float> out_data;
-    out_data.reserve(n_elements);
-    out_data.insert(out_data.end(), prob[0].begin(), prob[0].end());
-    infer_output.push_back(NuGraphOutput(pair.first, out_data));
+  for (const auto& [name, data] : infer_result) {
+    const auto& prob = data.fromServer<float>();
+    std::vector<float> out_data(prob[0].begin(), prob[0].end());
+    infer_output.emplace_back(name, std::move(out_data));
   }
 
   // Write the outputs to the output root file
