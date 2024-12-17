@@ -1,3 +1,5 @@
+add_subdirectory(Tools)
+
 cet_set_compiler_flags(DIAGS VIGILANT DWARF_VER 4
   WERROR
   NO_UNDEFINED

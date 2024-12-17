@@ -30,6 +30,9 @@
 #include "lardataobj/RecoBase/SpacePoint.h"
 #include "lardataobj/RecoBase/Vertex.h" //this creates a conflict with torch script if included before it...
 
+#include "larrecodnn/NuGraph/Tools/DecoderToolBase.h"
+#include "larrecodnn/NuGraph/Tools/LoaderToolBase.h"
+
 class NuGraphInference;
 
 using anab::FeatureVector;
@@ -80,28 +83,24 @@ public:
 
 private:
   vector<std::string> planes;
-  art::InputTag hitInput;
-  art::InputTag spsInput;
   size_t minHits;
   bool debug;
   vector<vector<float>> avgs;
   vector<vector<float>> devs;
-  bool filterDecoder;
-  bool semanticDecoder;
-  bool vertexDecoder;
+  vector<float> pos_norm;
   torch::jit::script::Module model;
+  // loader tool
+  std::unique_ptr<LoaderToolBase> _loaderTool;
+  // decoder tools
+  std::vector<std::unique_ptr<DecoderToolBase>> _decoderToolsVec;
 };
 
 NuGraphInference::NuGraphInference(fhicl::ParameterSet const& p)
   : EDProducer{p}
   , planes(p.get<vector<std::string>>("planes"))
-  , hitInput(p.get<art::InputTag>("hitInput"))
-  , spsInput(p.get<art::InputTag>("spsInput"))
   , minHits(p.get<size_t>("minHits"))
   , debug(p.get<bool>("debug"))
-  , filterDecoder(p.get<bool>("filterDecoder"))
-  , semanticDecoder(p.get<bool>("semanticDecoder"))
-  , vertexDecoder(p.get<bool>("vertexDecoder"))
+  , pos_norm(p.get<vector<float>>("pos_norm"))
 {
 
   for (size_t ip = 0; ip < planes.size(); ++ip) {
@@ -109,14 +108,19 @@ NuGraphInference::NuGraphInference(fhicl::ParameterSet const& p)
     devs.push_back(p.get<vector<float>>("devs_" + planes[ip]));
   }
 
-  if (filterDecoder) { produces<vector<FeatureVector<1>>>("filter"); }
-  //
-  if (semanticDecoder) {
-    produces<vector<FeatureVector<5>>>("semantic");
-    produces<MVADescription<5>>("semantic");
+  // Loader Tool
+  _loaderTool = art::make_tool<LoaderToolBase>(p.get<fhicl::ParameterSet>("LoaderTool"));
+  _loaderTool->setDebugAndPlanes(debug, planes);
+
+  // configure and construct Decoder Tools
+  auto const tool_psets = p.get<fhicl::ParameterSet>("DecoderTools");
+  for (auto const& tool_pset_labels : tool_psets.get_pset_names()) {
+    std::cout << "decoder lablel: " << tool_pset_labels << std::endl;
+    auto const tool_pset = tool_psets.get<fhicl::ParameterSet>(tool_pset_labels);
+    _decoderToolsVec.push_back(art::make_tool<DecoderToolBase>(tool_pset));
+    _decoderToolsVec.back()->setDebugAndPlanes(debug, planes);
+    _decoderToolsVec.back()->declareProducts(producesCollector());
   }
-  //
-  if (vertexDecoder) { produces<vector<recob::Vertex>>("vertex"); }
 
   cet::search_path sp("FW_SEARCH_PATH");
   model = torch::jit::load(sp.find_file(p.get<std::string>("modelFileName")));
@@ -124,51 +128,63 @@ NuGraphInference::NuGraphInference(fhicl::ParameterSet const& p)
 
 void NuGraphInference::produce(art::Event& e)
 {
-  art::Handle<vector<Hit>> hitListHandle;
+
+  //
+  // Load the data and fill the graph inputs
+  //
   vector<art::Ptr<Hit>> hitlist;
-  if (e.getByLabel(hitInput, hitListHandle)) { art::fill_ptr_vector(hitlist, hitListHandle); }
-
-  std::unique_ptr<vector<FeatureVector<1>>> filtcol(
-    new vector<FeatureVector<1>>(hitlist.size(), FeatureVector<1>(std::array<float, 1>({-1.}))));
-
-  std::unique_ptr<vector<FeatureVector<5>>> semtcol(new vector<FeatureVector<5>>(
-    hitlist.size(), FeatureVector<5>(std::array<float, 5>({-1., -1., -1., -1., -1.}))));
-  std::unique_ptr<MVADescription<5>> semtdes(
-    new MVADescription<5>(hitListHandle.provenance()->moduleLabel(),
-                          "semantic",
-                          {"MIP", "HIP", "shower", "michel", "diffuse"}));
-
-  std::unique_ptr<vector<recob::Vertex>> vertcol(new vector<recob::Vertex>());
+  vector<vector<size_t>> idsmap;
+  vector<NuGraphInput> graphinputs;
+  _loaderTool->loadData(e, hitlist, graphinputs, idsmap);
 
   if (debug) std::cout << "Hits size=" << hitlist.size() << std::endl;
   if (hitlist.size() < minHits) {
-    if (filterDecoder) { e.put(std::move(filtcol), "filter"); }
-    if (semanticDecoder) {
-      e.put(std::move(semtcol), "semantic");
-      e.put(std::move(semtdes), "semantic");
+    // Writing the empty outputs to the output root file
+    for (size_t i = 0; i < _decoderToolsVec.size(); i++) {
+      _decoderToolsVec[i]->writeEmptyToEvent(e, idsmap);
     }
-    if (vertexDecoder) { e.put(std::move(vertcol), "vertex"); }
     return;
   }
 
-  vector<vector<float>> nodeft_bare(planes.size(), vector<float>());
-  vector<vector<float>> nodeft(planes.size(), vector<float>());
-  vector<vector<double>> coords(planes.size(), vector<double>());
-  vector<vector<size_t>> idsmap(planes.size(), vector<size_t>());
+  //
+  // libTorch-specific section: requires extracting inputs, create graph, run inference
+  //
+  const vector<int32_t>* spids = nullptr;
+  const vector<int32_t>* hitids_u = nullptr;
+  const vector<int32_t>* hitids_v = nullptr;
+  const vector<int32_t>* hitids_y = nullptr;
+  const vector<int32_t>* hit_plane = nullptr;
+  const vector<float>* hit_time = nullptr;
+  const vector<int32_t>* hit_wire = nullptr;
+  const vector<float>* hit_integral = nullptr;
+  const vector<float>* hit_rms = nullptr;
+  for (const auto& gi : graphinputs) {
+    if (gi.input_name == "spacepoint_table_spacepoint_id")
+      spids = &gi.input_int32_vec;
+    else if (gi.input_name == "spacepoint_table_hit_id_u")
+      hitids_u = &gi.input_int32_vec;
+    else if (gi.input_name == "spacepoint_table_hit_id_v")
+      hitids_v = &gi.input_int32_vec;
+    else if (gi.input_name == "spacepoint_table_hit_id_y")
+      hitids_y = &gi.input_int32_vec;
+    else if (gi.input_name == "hit_table_local_plane")
+      hit_plane = &gi.input_int32_vec;
+    else if (gi.input_name == "hit_table_local_time")
+      hit_time = &gi.input_float_vec;
+    else if (gi.input_name == "hit_table_local_wire")
+      hit_wire = &gi.input_int32_vec;
+    else if (gi.input_name == "hit_table_integral")
+      hit_integral = &gi.input_float_vec;
+    else if (gi.input_name == "hit_table_rms")
+      hit_rms = &gi.input_float_vec;
+  }
+
+  // Reverse lookup from key to index in plane index
   vector<size_t> idsmapRev(hitlist.size(), hitlist.size());
-  for (auto h : hitlist) {
-    idsmap[h->View()].push_back(h.key());
-    idsmapRev[h.key()] = idsmap[h->View()].size() - 1;
-    coords[h->View()].push_back(h->PeakTime() * 0.055);
-    coords[h->View()].push_back(h->WireID().Wire * 0.3);
-    nodeft[h->View()].push_back((h->WireID().Wire * 0.3 - avgs[h->View()][0]) / devs[h->View()][0]);
-    nodeft[h->View()].push_back((h->PeakTime() * 0.055 - avgs[h->View()][1]) / devs[h->View()][1]);
-    nodeft[h->View()].push_back((h->Integral() - avgs[h->View()][2]) / devs[h->View()][2]);
-    nodeft[h->View()].push_back((h->RMS() - avgs[h->View()][3]) / devs[h->View()][3]);
-    nodeft_bare[h->View()].push_back(h->WireID().Wire * 0.3);
-    nodeft_bare[h->View()].push_back(h->PeakTime() * 0.055);
-    nodeft_bare[h->View()].push_back(h->Integral());
-    nodeft_bare[h->View()].push_back(h->RMS());
+  for (const auto& ipv : idsmap) {
+    for (size_t ih = 0; ih < ipv.size(); ih++) {
+      idsmapRev[ipv[ih]] = ih;
+    }
   }
 
   struct Edge {
@@ -183,12 +199,19 @@ void NuGraphInference::produce(art::Event& e)
     };
   };
 
+  // Delauney graph construction
   auto start_preprocess1 = std::chrono::high_resolution_clock::now();
   vector<vector<Edge>> edge2d(planes.size(), vector<Edge>());
   for (size_t p = 0; p < planes.size(); p++) {
-    if (debug) std::cout << "Plane " << p << " has N hits=" << coords[p].size() / 2 << std::endl;
-    if (coords[p].size() / 2 < 3) { continue; }
-    delaunator::Delaunator d(coords[p]);
+    vector<double> coords;
+    for (size_t i = 0; i < hit_plane->size(); ++i) {
+      if (size_t(hit_plane->at(i)) != p) continue;
+      coords.push_back(hit_time->at(i) * pos_norm[1]);
+      coords.push_back(hit_wire->at(i) * pos_norm[0]);
+    }
+    if (debug) std::cout << "Plane " << p << " has N hits=" << coords.size() / 2 << std::endl;
+    if (coords.size() / 2 < 3) { continue; }
+    delaunator::Delaunator d(coords);
     if (debug) std::cout << "Found N triangles=" << d.triangles.size() / 3 << std::endl;
     for (std::size_t i = 0; i < d.triangles.size(); i += 3) {
       //create edges in both directions
@@ -237,58 +260,60 @@ void NuGraphInference::produce(art::Event& e)
   auto end_preprocess1 = std::chrono::high_resolution_clock::now();
   std::chrono::duration<double> elapsed_preprocess1 = end_preprocess1 - start_preprocess1;
 
-  // Get spacepoints from the event record
-  art::Handle<vector<SpacePoint>> spListHandle;
-  vector<art::Ptr<SpacePoint>> splist;
-  if (e.getByLabel(spsInput, spListHandle)) { art::fill_ptr_vector(splist, spListHandle); }
-  // Get assocations from spacepoints to hits
-  vector<vector<art::Ptr<Hit>>> sp2Hit(splist.size());
-  if (splist.size() > 0) {
-    art::FindManyP<Hit> fmp(spListHandle, e, "sps");
-    for (size_t spIdx = 0; spIdx < sp2Hit.size(); ++spIdx) {
-      sp2Hit[spIdx] = fmp.at(spIdx);
-    }
-  }
-
-  //Edges are the same as in pyg, but order is not identical.
-  //It should not matter but better verify that output is indeed the same.
+  // Nexus edges
   auto start_preprocess2 = std::chrono::high_resolution_clock::now();
   vector<vector<Edge>> edge3d(planes.size(), vector<Edge>());
-  for (size_t i = 0; i < splist.size(); ++i) {
-    for (size_t j = 0; j < sp2Hit[i].size(); ++j) {
+  for (size_t i = 0; i < spids->size(); ++i) {
+    if (hitids_u->at(i) >= 0) {
       Edge e;
-      e.n1 = idsmapRev[sp2Hit[i][j].key()];
-      e.n2 = i;
-      edge3d[sp2Hit[i][j]->View()].push_back(e);
+      e.n1 = idsmapRev[hitids_u->at(i)];
+      e.n2 = spids->at(i);
+      edge3d[0].push_back(e);
+    }
+    if (hitids_v->at(i) >= 0) {
+      Edge e;
+      e.n1 = idsmapRev[hitids_v->at(i)];
+      e.n2 = spids->at(i);
+      edge3d[1].push_back(e);
+    }
+    if (hitids_y->at(i) >= 0) {
+      Edge e;
+      e.n1 = idsmapRev[hitids_y->at(i)];
+      e.n2 = spids->at(i);
+      edge3d[2].push_back(e);
     }
   }
 
+  // Prepare inputs
   auto x = torch::Dict<std::string, torch::Tensor>();
   auto batch = torch::Dict<std::string, torch::Tensor>();
   for (size_t p = 0; p < planes.size(); p++) {
-    long int dim = nodeft[p].size() / 4;
+    vector<float> nodeft;
+    for (size_t i = 0; i < hit_plane->size(); ++i) {
+      if (size_t(hit_plane->at(i)) != p) continue;
+      nodeft.push_back((hit_wire->at(i) * pos_norm[0] - avgs[hit_plane->at(i)][0]) /
+                       devs[hit_plane->at(i)][0]);
+      nodeft.push_back((hit_time->at(i) * pos_norm[1] - avgs[hit_plane->at(i)][1]) /
+                       devs[hit_plane->at(i)][1]);
+      nodeft.push_back((hit_integral->at(i) - avgs[hit_plane->at(i)][2]) /
+                       devs[hit_plane->at(i)][2]);
+      nodeft.push_back((hit_rms->at(i) - avgs[hit_plane->at(i)][3]) / devs[hit_plane->at(i)][3]);
+    }
+    long int dim = nodeft.size() / 4;
     torch::Tensor ix = torch::zeros({dim, 4}, torch::dtype(torch::kFloat32));
     if (debug) {
       std::cout << "plane=" << p << std::endl;
-      std::cout << std::fixed;
-      std::cout << std::setprecision(4);
-      std::cout << "before, plane=" << planes[p] << std::endl;
-      for (size_t n = 0; n < nodeft_bare[p].size(); n = n + 4) {
-        std::cout << nodeft_bare[p][n] << " " << nodeft_bare[p][n + 1] << " "
-                  << nodeft_bare[p][n + 2] << " " << nodeft_bare[p][n + 3] << " " << std::endl;
-      }
       std::cout << std::scientific;
-      std::cout << "after, plane=" << planes[p] << std::endl;
-      for (size_t n = 0; n < nodeft[p].size(); n = n + 4) {
-        std::cout << nodeft[p][n] << " " << nodeft[p][n + 1] << " " << nodeft[p][n + 2] << " "
-                  << nodeft[p][n + 3] << " " << std::endl;
+      for (size_t n = 0; n < nodeft.size(); n = n + 4) {
+        std::cout << nodeft[n] << " " << nodeft[n + 1] << " " << nodeft[n + 2] << " "
+                  << nodeft[n + 3] << " " << std::endl;
       }
     }
-    for (size_t n = 0; n < nodeft[p].size(); n = n + 4) {
-      ix[n / 4][0] = nodeft[p][n];
-      ix[n / 4][1] = nodeft[p][n + 1];
-      ix[n / 4][2] = nodeft[p][n + 2];
-      ix[n / 4][3] = nodeft[p][n + 3];
+    for (size_t n = 0; n < nodeft.size(); n = n + 4) {
+      ix[n / 4][0] = nodeft[n];
+      ix[n / 4][1] = nodeft[n + 1];
+      ix[n / 4][2] = nodeft[n + 2];
+      ix[n / 4][3] = nodeft[n + 3];
     }
     x.insert(planes[p], ix);
     torch::Tensor ib = torch::zeros({dim}, torch::dtype(torch::kInt64));
@@ -341,7 +366,7 @@ void NuGraphInference::produce(art::Event& e)
     }
   }
 
-  long int spdim = splist.size();
+  long int spdim = spids->size();
   auto nexus = torch::empty({spdim, 0}, torch::dtype(torch::kFloat32));
 
   std::vector<torch::jit::IValue> inputs;
@@ -350,6 +375,8 @@ void NuGraphInference::produce(art::Event& e)
   inputs.push_back(edge_index_nexus);
   inputs.push_back(nexus);
   inputs.push_back(batch);
+
+  // Run inference
   auto end_preprocess2 = std::chrono::high_resolution_clock::now();
   std::chrono::duration<double> elapsed_preprocess2 = end_preprocess2 - start_preprocess2;
   if (debug) std::cout << "FORWARD!" << std::endl;
@@ -363,67 +390,31 @@ void NuGraphInference::produce(art::Event& e)
               << " seconds" << std::endl;
     std::cout << "output =" << outputs << std::endl;
   }
-  if (semanticDecoder) {
-    for (size_t p = 0; p < planes.size(); p++) {
-      torch::Tensor s = outputs.at("x_semantic").toGenericDict().at(planes[p]).toTensor();
-      for (int i = 0; i < s.sizes()[0]; ++i) {
-        size_t idx = idsmap[p][i];
-        std::array<float, 5> input({s[i][0].item<float>(),
-                                    s[i][1].item<float>(),
-                                    s[i][2].item<float>(),
-                                    s[i][3].item<float>(),
-                                    s[i][4].item<float>()});
-        softmax(input);
-        FeatureVector<5> semt = FeatureVector<5>(input);
-        (*semtcol)[idx] = semt;
-      }
-      if (debug) {
-        for (int j = 0; j < 5; j++) {
-          std::cout << "x_semantic category=" << j << " : ";
-          for (size_t p = 0; p < planes.size(); p++) {
-            torch::Tensor s = outputs.at("x_semantic").toGenericDict().at(planes[p]).toTensor();
-            for (int i = 0; i < s.sizes()[0]; ++i)
-              std::cout << s[i][j].item<float>() << ", ";
-          }
-          std::cout << std::endl;
-        }
+
+  //
+  // Get pointers to the result returned and write to the event
+  //
+  vector<NuGraphOutput> infer_output;
+  for (const auto& elem1 : outputs) {
+    if (elem1.value().isTensor()) {
+      torch::Tensor tensor = elem1.value().toTensor();
+      std::vector<float> vec(tensor.data_ptr<float>(), tensor.data_ptr<float>() + tensor.numel());
+      infer_output.push_back(NuGraphOutput(elem1.key().to<std::string>(), vec));
+    }
+    else if (elem1.value().isGenericDict()) {
+      for (const auto& elem2 : elem1.value().toGenericDict()) {
+        torch::Tensor tensor = elem2.value().toTensor();
+        std::vector<float> vec(tensor.data_ptr<float>(), tensor.data_ptr<float>() + tensor.numel());
+        infer_output.push_back(
+          NuGraphOutput(elem1.key().to<std::string>() + "_" + elem2.key().to<std::string>(), vec));
       }
     }
-  }
-  if (filterDecoder) {
-    for (size_t p = 0; p < planes.size(); p++) {
-      torch::Tensor f = outputs.at("x_filter").toGenericDict().at(planes[p]).toTensor();
-      for (int i = 0; i < f.numel(); ++i) {
-        size_t idx = idsmap[p][i];
-        std::array<float, 1> input({f[i].item<float>()});
-        (*filtcol)[idx] = FeatureVector<1>(input);
-      }
-    }
-    if (debug) {
-      std::cout << "x_filter : ";
-      for (size_t p = 0; p < planes.size(); p++) {
-        torch::Tensor f = outputs.at("x_filter").toGenericDict().at(planes[p]).toTensor();
-        for (int i = 0; i < f.numel(); ++i)
-          std::cout << f[i].item<float>() << ", ";
-      }
-      std::cout << std::endl;
-    }
-  }
-  if (vertexDecoder) {
-    torch::Tensor v = outputs.at("x_vertex").toGenericDict().at(0).toTensor();
-    double vpos[3];
-    vpos[0] = v[0].item<float>();
-    vpos[1] = v[1].item<float>();
-    vpos[2] = v[2].item<float>();
-    vertcol->push_back(recob::Vertex(vpos));
   }
 
-  if (filterDecoder) { e.put(std::move(filtcol), "filter"); }
-  if (semanticDecoder) {
-    e.put(std::move(semtcol), "semantic");
-    e.put(std::move(semtdes), "semantic");
+  // Write the outputs to the output root file
+  for (size_t i = 0; i < _decoderToolsVec.size(); i++) {
+    _decoderToolsVec[i]->writeToEvent(e, idsmap, infer_output);
   }
-  if (vertexDecoder) { e.put(std::move(vertcol), "vertex"); }
 }
 
 DEFINE_ART_MODULE(NuGraphInference)
