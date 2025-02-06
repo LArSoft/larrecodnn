@@ -93,11 +93,7 @@ namespace lcvn {
     double Threshold() const { return fThreshold; }
     bool MultipleDrifts() const { return fMultipleDrifts; }
 
-    void SetNWire(unsigned int nwire) { fNWire = nwire; }
-    void SetNTdc(unsigned int ntdc) { fNTdc = ntdc; }
-    void SetTRes(double tres) { fTRes = tres; }
-    void SetTotHits(unsigned int tothits) {fTotHits = tothits; }
-    void SetThreshold(double threshold) {fThreshold = threshold; }
+    void SetTotHits(unsigned int tothits) { fTotHits = tothits; }
     void SetMultipleDrifts(bool multipledrifts = true) { fMultipleDrifts = multipledrifts; }
 
     /// Get boundaries for pixel map representation of cluster
@@ -113,7 +109,6 @@ namespace lcvn {
                                          unsigned int& globalWire,
                                          unsigned int& globalPlane,
                                          double& globalTDC) const;
-
 
     virtual PixelMap CreateMap(detinfo::DetectorPropertiesData const& detProp,
                                const std::vector<art::Ptr<T>>& cluster);
