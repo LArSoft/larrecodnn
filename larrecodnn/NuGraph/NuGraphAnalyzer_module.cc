@@ -106,6 +106,9 @@ void NuGraphAnalyzer::analyze(art::Event const& e)
     _shower = assocSemantic.at(GNNDescription->getIndex("shower"));
     _michel = assocSemantic.at(GNNDescription->getIndex("michel"));
     _diffuse = assocSemantic.at(GNNDescription->getIndex("diffuse"));
+    _wire = h->WireID().Wire;
+    _plane = h->WireID().Plane;
+    _time = h->PeakTime();
     _treeHit->Fill();
   }
 
