@@ -29,7 +29,7 @@ namespace lcvn {
     auto const detProp =
       art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(evt);
     PixelMap pm = fProducer.CreateMap(detProp, hitlist);
-    auto nhits = fProducer.NROI();
+    auto nhits = fProducer.TotHits();
     pm.SetTotHits(nhits);
 
     if (nhits > fMinClusterHits) pmCol->push_back(pm);

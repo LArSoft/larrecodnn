@@ -86,8 +86,15 @@ namespace lcvn {
     // overload constructor for inputs from fcl
     PixelMapProducer(const fhicl::ParameterSet& pset);
 
-    void SetMultipleDrifts() { fMultipleDrifts = true; }
-    unsigned int NROI() { return fTotHits; };
+    unsigned int NWire() const { return fNWire; }
+    unsigned int NTdc() const { return fNTdc; }
+    double TRes() const { return fTRes; }
+    unsigned int TotHits() const { return fTotHits; }
+    double Threshold() const { return fThreshold; }
+    bool MultipleDrifts() const { return fMultipleDrifts; }
+
+    void SetTotHits(unsigned int tothits) { fTotHits = tothits; }
+    void SetMultipleDrifts(bool multipledrifts = true) { fMultipleDrifts = multipledrifts; }
 
     /// Get boundaries for pixel map representation of cluster
     virtual Boundary DefineBoundary(detinfo::DetectorPropertiesData const& detProp,
@@ -102,10 +109,6 @@ namespace lcvn {
                                          unsigned int& globalWire,
                                          unsigned int& globalPlane,
                                          double& globalTDC) const;
-
-    unsigned int NWire() const { return fNWire; }
-    unsigned int NTdc() const { return fNTdc; }
-    double TRes() const { return fTRes; }
 
     virtual PixelMap CreateMap(detinfo::DetectorPropertiesData const& detProp,
                                const std::vector<art::Ptr<T>>& cluster);
