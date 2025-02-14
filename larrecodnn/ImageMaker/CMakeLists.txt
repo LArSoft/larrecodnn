@@ -1,4 +1,3 @@
-
 # at this time, hep_hpc does not define target libraries
 include_directories($ENV{HEP_HPC_INC})
 
@@ -18,6 +17,13 @@ cet_build_plugin(SavePiMu art::tool
   ${HEP_HPC_HDF5}
   HDF5::HDF5
 )
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND
+    CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "13.2")
+  # GCC 13.2 (and above) aggressively/spuriously warns about array-bounds issues.
+  target_compile_options(larrecodnn_ImageMaker_SavePiMu_tool
+                         PRIVATE "-Wno-array-bounds;-Wno-stringop-overread")
+endif()
 
 install_headers()
 install_fhicl()
