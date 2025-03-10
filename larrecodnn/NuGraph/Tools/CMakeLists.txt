@@ -1,5 +1,7 @@
 cet_enable_asserts()
 
+cet_make_library(LIBRARY_NAME NuGraphBaseTools INTERFACE SOURCE LoaderToolBase.h DecoderToolBase.h)
+
 set( nugraph_tool_lib_list
        lardataobj::RecoBase
        lardataobj::AnalysisBase
