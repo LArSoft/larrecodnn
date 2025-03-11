@@ -4,7 +4,6 @@ cet_make_library(LIBRARY_NAME NuGraphBaseTools
                  INTERFACE SOURCE LoaderToolBase.h DecoderToolBase.h
                  LIBRARIES INTERFACE
                    lardataobj::RecoBase
-                   lardataobj::AnalysisBase
                    art::Framework_Principal
                    art::Framework_Core
                    fhiclcpp::fhiclcpp
