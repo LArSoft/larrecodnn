@@ -1,8 +1,8 @@
 #include "LoaderToolBase.h"
 
+#include "art/Utilities/ToolMacros.h"
+
 #include "canvas/Persistency/Common/FindManyP.h"
-#include "canvas/Persistency/Common/Ptr.h"
-#include "canvas/Utilities/InputTag.h"
 #include "lardataobj/RecoBase/SpacePoint.h"
 #include <torch/torch.h>
 
