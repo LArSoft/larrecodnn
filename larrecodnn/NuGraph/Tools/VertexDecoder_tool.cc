@@ -1,5 +1,7 @@
 #include "DecoderToolBase.h"
 
+#include "art/Utilities/ToolMacros.h"
+
 #include "lardataobj/RecoBase/Vertex.h"
 #include <torch/torch.h>
 

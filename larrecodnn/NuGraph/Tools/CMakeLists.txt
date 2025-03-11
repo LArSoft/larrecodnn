@@ -1,5 +1,15 @@
 cet_enable_asserts()
 
+cet_make_library(LIBRARY_NAME NuGraphBaseTools
+                 INTERFACE SOURCE LoaderToolBase.h DecoderToolBase.h
+                 LIBRARIES INTERFACE
+                   lardataobj::RecoBase
+                   art::Framework_Principal
+                   art::Framework_Core
+                   fhiclcpp::fhiclcpp
+                   art_plugin_types::tool
+                )
+
 set( nugraph_tool_lib_list
        lardataobj::RecoBase
        lardataobj::AnalysisBase
@@ -7,6 +17,7 @@ set( nugraph_tool_lib_list
        TorchScatter::TorchScatter
        art::Framework_Core
        hep_concurrency::hep_concurrency
+       art_plugin_support::toolMaker
 )
 
 cet_build_plugin(FilterDecoder art::tool

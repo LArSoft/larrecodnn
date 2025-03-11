@@ -1,11 +1,6 @@
 #ifndef LOADERTOOLBASE_H
 #define LOADERTOOLBASE_H
 
-// art TOOL
-#include "art/Utilities/ToolMacros.h"
-#include "art/Utilities/make_tool.h"
-
-#include "art/Framework/Core/EDProducer.h"
 #include "art/Framework/Principal/Event.h"
 #include "fhiclcpp/ParameterSet.h"
 
