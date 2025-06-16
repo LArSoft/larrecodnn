@@ -48,13 +48,14 @@ public:
 private:
   // Declare member data here.
   TTree *_treeHit, *_treeEvt;
-  int _run, _subrun, _event, _id, _wire, _plane;
+  int _run, _subrun, _event, _id, _wire, _plane, _tpc, _cryo;
   float _x_filter, _MIP, _HIP, _shower, _michel, _diffuse, _time;
   float _vtx_x, _vtx_y, _vtx_z;
+  std::string nglabel;
 };
 
-NuGraphAnalyzer::NuGraphAnalyzer(fhicl::ParameterSet const& p) : EDAnalyzer{p} // ,
-// More initializers here.
+NuGraphAnalyzer::NuGraphAnalyzer(fhicl::ParameterSet const& p)
+  : EDAnalyzer{p}, nglabel{p.get<std::string>("NuGraphLabel", "NuGraph")}
 {
   // Call appropriate consumes<>() for any products to be retrieved by this module.
   art::ServiceHandle<art::TFileService> tfs;
@@ -65,6 +66,8 @@ NuGraphAnalyzer::NuGraphAnalyzer(fhicl::ParameterSet const& p) : EDAnalyzer{p} /
   _treeHit->Branch("id", &_id, "id/I");
   _treeHit->Branch("wire", &_wire, "wire/I");
   _treeHit->Branch("plane", &_plane, "plane/I");
+  _treeHit->Branch("tpc", &_tpc, "tpc/I");
+  _treeHit->Branch("cryo", &_cryo, "cryo/I");
   _treeHit->Branch("x_filter", &_x_filter, "x_filter/F");
   _treeHit->Branch("MIP", &_MIP, "MIP/F");
   _treeHit->Branch("HIP", &_HIP, "HIP/F");
@@ -84,13 +87,13 @@ NuGraphAnalyzer::NuGraphAnalyzer(fhicl::ParameterSet const& p) : EDAnalyzer{p} /
 void NuGraphAnalyzer::analyze(art::Event const& e)
 {
 
-  auto GNNDescription = e.getHandle<anab::MVADescription<5>>(art::InputTag("NuGraph", "semantic"));
+  auto GNNDescription = e.getHandle<anab::MVADescription<5>>(art::InputTag(nglabel, "semantic"));
 
   auto const& hitsWithScores = proxy::getCollection<std::vector<recob::Hit>>(
     e,
     GNNDescription->dataTag(), //tag of the hit collection we ran the GNN on
-    proxy::withParallelData<anab::FeatureVector<1>>(art::InputTag("NuGraph", "filter")),
-    proxy::withParallelData<anab::FeatureVector<5>>(art::InputTag("NuGraph", "semantic")));
+    proxy::withParallelData<anab::FeatureVector<1>>(art::InputTag(nglabel, "filter")),
+    proxy::withParallelData<anab::FeatureVector<5>>(art::InputTag(nglabel, "semantic")));
 
   std::cout << hitsWithScores.size() << std::endl;
   for (auto& h : hitsWithScores) {
@@ -108,11 +111,13 @@ void NuGraphAnalyzer::analyze(art::Event const& e)
     _diffuse = assocSemantic.at(GNNDescription->getIndex("diffuse"));
     _wire = h->WireID().Wire;
     _plane = h->WireID().Plane;
+    _tpc = h->WireID().TPC;
+    _cryo = h->WireID().Cryostat;
     _time = h->PeakTime();
     _treeHit->Fill();
   }
 
-  auto PredVertexColl = e.getHandle<std::vector<recob::Vertex>>(art::InputTag("NuGraph", "vertex"));
+  auto PredVertexColl = e.getHandle<std::vector<recob::Vertex>>(art::InputTag(nglabel, "vertex"));
   if (PredVertexColl.isValid() && PredVertexColl->size() > 0) { //there should be only one
     _vtx_x = PredVertexColl->at(0).position().X();
     _vtx_y = PredVertexColl->at(0).position().Y();
