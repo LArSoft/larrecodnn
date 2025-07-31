@@ -382,7 +382,20 @@ void NuGraphInference::produce(art::Event& e)
   std::chrono::duration<double> elapsed_preprocess2 = end_preprocess2 - start_preprocess2;
   if (debug) std::cout << "FORWARD!" << std::endl;
   auto start = std::chrono::high_resolution_clock::now();
-  auto outputs = model.forward(inputs).toGenericDict();
+  c10::IValue raw_outputs;
+
+  {
+    // Use NoGradGuard to disable gradient tracking.
+    // Gradients are not needed for inference, so save some memory and computation
+    // by disabling them.
+    //
+    // This is equivalent to `with torch.no_grad():` in Python.
+    // Uses RAII, so is disabled once the guard goes out of scope.
+    torch::NoGradGuard guard;
+    raw_outputs = model.forward(inputs);
+  }
+
+  auto outputs = raw_outputs.toGenericDict();
   auto end = std::chrono::high_resolution_clock::now();
   std::chrono::duration<double> elapsed = end - start;
   if (debug) {
