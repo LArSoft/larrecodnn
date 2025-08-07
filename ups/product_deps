@@ -248,7 +248,7 @@ fwdir	product_dir	config_data
 #
 ####################################
 product		version		qual	flags		<table_format=2>
-larreco		v10_01_16	-
+larreco		v10_02_00	-
 larfinder       v09_00_02       -
 tensorflow	v2_15_0		-	optional
 triton		v2_25_0d	-	optional
