@@ -13,7 +13,7 @@ public:
   virtual ~ITable() {};
   virtual void Fill(const art::Event&) = 0;
   virtual void InitNtuple(hep_hpc::hdf5::File&) = 0;
-  virtual void WriteNtuple(bool=false) = 0;
+  virtual void WriteNtuple(bool=true) = 0;
   virtual void DestroyNtuple() = 0;
 }; // class ITable
 
@@ -57,13 +57,12 @@ public:
     fNtuple = std::make_unique<Ntuple>(file, fName, columns);
   } // function Table::InitNtuple
 
-  void WriteNtuple(bool clear=true) override
+  void WriteNtuple(bool clear) override
   {
     constexpr auto N = std::tuple_size_v<Row>;
     for (const Row& row : fData) {
       WriteRow<Row>(row, std::make_index_sequence<N>{});
     } // for table row
-
     if (clear) {
       Clear();
     } // if clearing data

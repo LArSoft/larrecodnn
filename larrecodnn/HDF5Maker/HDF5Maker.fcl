@@ -1,0 +1,6 @@
+hdf5maker:
+{
+  module_type:  "larrecodnn/HDF5Maker/HDF5Maker"
+  NuLabel:      "generator"
+  OutputName:   "hdf5maker"
+}

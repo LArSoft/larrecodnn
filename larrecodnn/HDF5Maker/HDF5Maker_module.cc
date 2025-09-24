@@ -92,16 +92,14 @@ void HDF5Maker::analyze(const art::Event& evt)
 //-----------------------------------------------------------------------------
 void HDF5Maker::InitHDF5File(art::SubRun const& sr)
 {
-  struct timeval now;
-  gettimeofday(&now, NULL);
-
   // Open HDF5 output
   std::ostringstream fileName;
-  fileName << fOutputName << "_r" << std::setfill('0') << std::setw(5) << sr.run()
-    << "_s" << std::setfill('0') << std::setw(5) << sr.subRun() << "_ts" << std::setw(6) << now.tv_usec << ".h5";
-
+  fileName << fOutputName << "_r" << std::setfill('0') << std::setw(5)
+           << sr.run() << "_s" << std::setfill('0') << std::setw(5)
+           << sr.subRun() << ".h5";
   fFile = hep_hpc::hdf5::File(fileName.str(), H5F_ACC_TRUNC);
 
+  // initialize ntuples for each table
   for (std::unique_ptr<ITable>& table : fTables) {
     table->InitNtuple(fFile);
   } // for table
