@@ -52,23 +52,10 @@ public:
   /// HDF5 interface
   void InitNtuple(hep_hpc::hdf5::File& file) override
   {
-
-    fNtuple = std::make_unique<Ntuple>(file, fName, form_input_arguments<Row>(fColumns));
+    constexpr auto N = std::tuple_size_v<Row>;
+    auto columns = InitColumns<Row>(std::make_index_sequence<N>{});
+    fNtuple = std::make_unique<Ntuple>(file, fName, columns);
   } // function Table::InitNtuple
-
-  template <typename InputTypes, std::size_t... Is>
-  auto form_input_arguments_impl(const std::vector<std::string>& names, std::index_sequence<Is...>)
-  {
-    return std::make_tuple(hep_hpc::hdf5::Column<std::tuple_element_t<Is, InputTypes>, 1>(names[Is])...);
-  }
-
-  template <typename InputTypes>
-  auto form_input_arguments(const std::vector<std::string>& names)
-  {
-    constexpr auto N = std::tuple_size_v<InputTypes>;
-    return form_input_arguments_impl<InputTypes>(names, std::make_index_sequence<N>{});
-  }
-
 
   void WriteNtuple(bool clear=true) override
   {
@@ -91,6 +78,13 @@ protected:
   std::vector<std::string> fColumns;
   std::vector<Row> fData;
   std::unique_ptr<Ntuple> fNtuple;
+
+  template <typename InputTypes, std::size_t... Is>
+  auto InitColumns(std::index_sequence<Is...>)
+  {
+    return std::make_tuple(hep_hpc::hdf5::Column<
+      std::tuple_element_t<Is, InputTypes>, 1>(fColumns[Is])...);
+  } // function Table::InitColumns
 
 }; // template table class
 
