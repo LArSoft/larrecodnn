@@ -4,7 +4,7 @@ namespace ng {
 
 //-----------------------------------------------------------------------------
 // names of columns in event table
-static const std::vector<std::double> EventColumns
+static const std::vector<std::string> EventColumns
 {
   "run", "subrun", "event"
 };
