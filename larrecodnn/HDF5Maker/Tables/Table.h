@@ -59,9 +59,10 @@ public:
 
   void WriteNtuple(bool clear=true) override
   {
-    // for (const Row& row : fData) {
-    //   fNtuple->insert(row); // needs to unpack the elements
-    // } // for table row
+    constexpr auto N = std::tuple_size_v<Row>;
+    for (const Row& row : fData) {
+      WriteRow<Row>(row, std::make_index_sequence<N>{});
+    } // for table row
 
     if (clear) {
       Clear();
@@ -78,6 +79,12 @@ protected:
   std::vector<std::string> fColumns;
   std::vector<Row> fData;
   std::unique_ptr<Ntuple> fNtuple;
+
+  template <typename InputTypes, std::size_t... Is>
+  void WriteRow(const Row& row, std::index_sequence<Is...>)
+  {
+    fNtuple->insert(std::get<Is>(row)...);
+  } // function Table::WriteRow
 
   template <typename InputTypes, std::size_t... Is>
   auto InitColumns(std::index_sequence<Is...>)

@@ -6,7 +6,7 @@ namespace ng {
 
 //-----------------------------------------------------------------------------
 // names of columns in neutrino table
-static const Table::Columns NeutrinoColumns
+static const std::vector<std::string> NeutrinoColumns
 {
   "run", "subrun", "event", "nu_id", "is_cc", "nu_pdg", "lep_energy",
   "nu_vtx_x", "nu_vtx_y", "nu_vtx_z", "nu_vtx_t",
