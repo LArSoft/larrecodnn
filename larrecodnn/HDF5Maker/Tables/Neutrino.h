@@ -10,7 +10,7 @@ class NeutrinoTable : public Table
 {
 public:
   // neutrino table constructor
-  NeutrinoTable(std::string cosnt& nuLabel,
+  NeutrinoTable(std::string const& nuLabel,
                 std::vector<Row> const& data={});
 
   // function to fill table from event
