@@ -8,7 +8,7 @@ class EDepTable : public Table<int, int, int, int, int, float, float, float, flo
 {
 public:
   // edep table constructor
-  EventTable(std::vector<Row> const& data={});
+  EDepTable(std::vector<Row> const& data={});
 
   // function to fill table from event
   void Fill(art::Event const& evt);
