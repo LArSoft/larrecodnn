@@ -4,7 +4,8 @@
 
 namespace ng {
 
-class EDepTable : public Table<int, int, int, int, int, float, float, float, float>
+class EDepTable : public Table
+  <int, int, int, int, int, float, float, float, float>
 {
 public:
   // edep table constructor

@@ -12,7 +12,7 @@ std::vector<std::string> static const EDepColumns
 
 //-----------------------------------------------------------------------------
 // edep table constructor
-EDepTable::EventTable(std::vector<Row> const& data)
+EDepTable::EDepTable(std::vector<Row> const& data)
   : Table("edeps", EDepColumns, data)
 {}
 
