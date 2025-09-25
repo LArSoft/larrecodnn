@@ -6,7 +6,7 @@ namespace ng {
 
 //-----------------------------------------------------------------------------
 // names of columns in neutrino table
-static const std::vector<std::string> NeutrinoColumns
+std::vector<std::string> static const NeutrinoColumns
 {
   "run", "subrun", "event", "nu_id", "is_cc", "nu_pdg", "lep_energy",
   "nu_vtx_x", "nu_vtx_y", "nu_vtx_z", "nu_vtx_t",
@@ -15,16 +15,16 @@ static const std::vector<std::string> NeutrinoColumns
 
 //-----------------------------------------------------------------------------
 // neutrino table constructor
-NeutrinoTable::NeutrinoTable(const std::string& nuLabel,
-                             const std::vector<Row>& data)
+NeutrinoTable::NeutrinoTable(std::string const& nuLabel,
+                             std::vector<Row> const& data)
   : Table("neutrinos", NeutrinoColumns, data), fNuLabel(nuLabel)
 {}
 
 //-----------------------------------------------------------------------------
-void NeutrinoTable::Fill(const art::Event& evt)
+void NeutrinoTable::Fill(art::Event const& evt)
 {
   // get event ID
-  const art::EventID& id = evt.id();
+  art::EventID const& id = evt.id();
 
   // get neutrino truth information
   auto mcts = evt.getHandle<std::vector<simb::MCTruth>>(fNuLabel);

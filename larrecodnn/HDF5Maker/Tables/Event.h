@@ -8,10 +8,10 @@ class EventTable : public Table<int, int, int>
 {
 public:
   // event table constructor
-  EventTable(const std::vector<Row>& data={});
+  EventTable(std::vector<Row> const& data={});
 
   // function to fill table from event
-  void Fill(const art::Event& evt);
+  void Fill(art::Event const& evt);
 }; // class EventTable
 
 } // namespace ng

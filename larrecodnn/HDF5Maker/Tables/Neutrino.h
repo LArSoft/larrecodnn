@@ -10,11 +10,11 @@ class NeutrinoTable : public Table
 {
 public:
   // neutrino table constructor
-  NeutrinoTable(const std::string& nuLabel,
-                const std::vector<Row>& data={});
+  NeutrinoTable(std::string cosnt& nuLabel,
+                std::vector<Row> const& data={});
 
   // function to fill table from event
-  void Fill(const art::Event& evt);
+  void Fill(art::Event const& evt);
 
 private:
   std::string fNuLabel; ///< Label for neutrino MCTruth data product

@@ -11,7 +11,7 @@ namespace ng {
 class ITable {
 public:
   virtual ~ITable() {};
-  virtual void Fill(const art::Event&) = 0;
+  virtual void Fill(art::Event const&) = 0;
   virtual void InitNtuple(hep_hpc::hdf5::File&) = 0;
   virtual void WriteNtuple(bool=true) = 0;
   virtual void DestroyNtuple() = 0;
@@ -33,8 +33,8 @@ public:
   ~Table() override = default;
 
   /// Table constructor
-  Table(const std::string& name, const std::vector<std::string>& columns,
-        const std::vector<Row>& data={})
+  Table(std::string const& name, std::vector<std::string> const& columns,
+        std::vector<Row> const& data={})
     : fName(name), fColumns(columns), fData(data)
   {
     if (sizeof...(Types) != fColumns.size()) {
@@ -80,7 +80,7 @@ protected:
   std::unique_ptr<Ntuple> fNtuple;
 
   template <typename InputTypes, std::size_t... Is>
-  void WriteRow(const Row& row, std::index_sequence<Is...>)
+  void WriteRow(Row const& row, std::index_sequence<Is...>)
   {
     fNtuple->insert(std::get<Is>(row)...);
   } // function Table::WriteRow

@@ -4,22 +4,22 @@ namespace ng {
 
 //-----------------------------------------------------------------------------
 // names of columns in event table
-static const std::vector<std::string> EventColumns
+std::vector<std::string> static const EventColumns
 {
   "run", "subrun", "event"
 };
 
 //-----------------------------------------------------------------------------
 // event table constructor
-EventTable::EventTable(const std::vector<Row>& data)
+EventTable::EventTable(std::vector<Row> const& data)
   : Table("events", EventColumns, data)
 {}
 
 //-----------------------------------------------------------------------------
-void EventTable::Fill(const art::Event& evt)
+void EventTable::Fill(art::Event const& evt)
 {
   // get event ID
-  const art::EventID& id = evt.id();
+  art::EventID const& id = evt.id();
 
   // fill table row
   fData.push_back({id.run(), id.subRun(), id.event()});
