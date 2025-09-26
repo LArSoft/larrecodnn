@@ -8,6 +8,7 @@ cet_set_compiler_flags(DIAGS VIGILANT DWARF_VER 4
 cet_make_library(SOURCE
   EDep.cxx
   Event.cxx
+  LDep.cxx
   Neutrino.cxx
   Particle.cxx
   Spacepoint.cxx
@@ -18,6 +19,7 @@ cet_make_library(SOURCE
   nusimdata::SimulationBase
   larsim::MCCheater_BackTrackerService_service
   larsim::MCCheater_ParticleInventoryService_service
+  larsim::MCCheater_PhotonBackTrackerService_service
   lardata::DetectorInfoServices_DetectorClocksServiceStandard_service
   ${HEP_HPC_HDF5}
   HDF5::HDF5
