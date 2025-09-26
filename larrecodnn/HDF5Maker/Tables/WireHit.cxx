@@ -79,6 +79,6 @@ void WireHitTable::Fill(art::Event const& evt)
 
   } // for hit
 
-} // function TPCHitTable::Fill
+} // function WireHitTable::Fill
 
 } // namespace ng
