@@ -6,7 +6,6 @@ cet_set_compiler_flags(DIAGS VIGILANT DWARF_VER 4
   EXTRA_FLAGS -pedantic)
 
 cet_make_library(SOURCE
-  Table.h
   EDep.cxx
   Event.cxx
   Hit.cxx

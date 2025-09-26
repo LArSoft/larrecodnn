@@ -4,9 +4,11 @@
 
 namespace ng {
 
-class EDepTable : public Table
-  <int, int, int, int, int, float, float, float, float>
-{
+class EDepTable : public Table<
+  unsigned int /*run*/, unsigned int /*subrun*/, unsigned int /*event*/,
+  unsigned int /*hid_id*/, unsigned int /*g4_id*/, float /*energy*/,
+  float /*position_x*/, float /*position_y*/, float /*position_z*/
+>{
 public:
   // edep table constructor
   EDepTable(std::string const& hitLabel,

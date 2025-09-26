@@ -4,10 +4,13 @@
 
 namespace ng {
 
-class NeutrinoTable : public Table
-  <int, int, int, int, int, int, float, float, float, float, float,
-   float, float, float, float>
-{
+class NeutrinoTable : public Table<
+  unsigned int /*run*/, unsigned int /*subrun*/, unsigned int /*event*/,
+  unsigned int /*nu_id*/, unsigned int /*is_cc*/, int /*pdg_code*/,
+  float /*lepton_energy*/, float /*vertex_x*/, float /*vertex_y*/,
+  float /*vertex_z*/, float /*vertex_t*/, float /*momentum_x*/,
+  float /*momentum_y*/, float /*momentum_z*/, float /*momentum_e*/
+>{
 public:
   // neutrino table constructor
   NeutrinoTable(std::string const& nuLabel,

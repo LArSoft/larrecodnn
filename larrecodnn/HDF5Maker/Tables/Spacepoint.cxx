@@ -10,8 +10,7 @@ namespace ng {
 // names of columns in spacepoint table
 std::vector<std::string> static const SpacepointColumns
 {
-  "run", "subrun", "event", "spacepoint_id",
-  "position_x", "position_y", "position_z",
+  "run", "subrun", "event", "sp_id", "position_x", "position_y", "position_z",
   "hit_id_1", "hit_id_2", "hit_id_3"
 };
 
@@ -34,7 +33,7 @@ void SpacepointTable::Fill(art::Event const& evt)
   art::FindManyP<recob::Hit> fmp(sps, evt, fSpacepointLabel);
 
   // loop over spacepoints
-  for (size_t sp_id = 0; sp_id < sps->size(); ++sp_id) {
+  for (unsigned int sp_id = 0; sp_id < sps->size(); ++sp_id) {
     recob::SpacePoint const& sp = sps->at(sp_id);
 
     // store IDs of associated hits

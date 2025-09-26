@@ -4,8 +4,9 @@
 
 namespace ng {
 
-class EventTable : public Table<int, int, int>
-{
+class EventTable : public Table<
+  unsigned int /*run*/, unsigned int /*subrun*/, unsigned int /*event*/
+>{
 public:
   // event table constructor
   EventTable(std::vector<Row> const& data={});

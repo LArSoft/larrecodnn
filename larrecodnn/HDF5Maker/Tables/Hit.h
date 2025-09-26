@@ -4,9 +4,12 @@
 
 namespace ng {
 
-class HitTable : public Table
-  <int, int, int, int, float, float, int, int, float, float, int, float, float>
-{
+class HitTable : public Table<
+  unsigned int /*run*/, unsigned int /*subrun*/, unsigned int /*event*/,
+  unsigned int /*hit_id*/, float /*integral*/, float /*rms*/,
+  unsigned int /*tpc_id*/, unsigned int /*plane*/, float /*wire*/,
+  float /*time*/, unsigned int /*view*/, float /*proj*/, float /*drift*/
+>{
 public:
   // hit table constructor
   HitTable(std::string const& hitLabel, std::vector<Row> const& data={});

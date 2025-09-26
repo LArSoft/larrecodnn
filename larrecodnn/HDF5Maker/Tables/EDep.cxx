@@ -27,19 +27,20 @@ void EDepTable::Fill(art::Event const& evt)
   art::EventID const& id = evt.id();
 
   // get service handles
-  auto const bt = art::ServiceHandle<cheat::BackTrackerService>();
-  auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(evt);
+  art::ServiceHandle<cheat::BackTrackerService> bt;
+  art::ServiceHandle<detinfo::DetectorClocksService> dc;
 
   // loop over hits
+  auto const clock_data = dc->DataFor(evt);
   auto hits = evt.getHandle<std::vector<recob::Hit>>(fHitLabel);
   for (size_t hit_id = 0; hit_id < hits->size(); ++hit_id) {
     recob::Hit const& hit = hits->at(hit_id);
 
     // skip events with no TrackIDEs
-    if (!bt->HitToTrackIds(clockData, hit).size()) continue;
+    if (!bt->HitToTrackIds(clock_data, hit).size()) continue;
 
     // loop over averaged sim::IDEs
-    for (const sim::IDE& ide : bt->HitToAvgSimIDEs(clockData, hit)) {
+    for (const sim::IDE& ide : bt->HitToAvgSimIDEs(clock_data, hit)) {
 
       // catch negative track IDs
       if (ide.trackID < 0) {

@@ -8,9 +8,9 @@ namespace ng {
 // names of columns in neutrino table
 std::vector<std::string> static const NeutrinoColumns
 {
-  "run", "subrun", "event", "nu_id", "is_cc", "nu_pdg", "lep_energy",
-  "nu_vtx_x", "nu_vtx_y", "nu_vtx_z", "nu_vtx_t",
-  "nu_mom_x", "nu_mom_y", "nu_mom_z", "nu_mom_e"
+  "run", "subrun", "event", "nu_id", "is_cc", "pdg_code", "lepton_energy",
+  "vertex_x", "vertex_y", "vertex_z", "vertex_t",
+  "momentum_x", "momentum_y", "momentum_z", "momentum_e"
 };
 
 //-----------------------------------------------------------------------------
@@ -28,18 +28,18 @@ void NeutrinoTable::Fill(art::Event const& evt)
 
   // get neutrino truth information
   auto mcts = evt.getHandle<std::vector<simb::MCTruth>>(fNuLabel);
-  for (size_t i = 0; i < mcts->size(); ++i) {
-    const simb::MCNeutrino& mcn = mcts->at(i).GetNeutrino();
+  for (unsigned int nu_id = 0; nu_id < mcts->size(); ++nu_id) {
+    const simb::MCNeutrino& mcn = mcts->at(nu_id).GetNeutrino();
     const simb::MCParticle& nu = mcn.Nu();
     const TVector3& dir = nu.Momentum().Vect().Unit();
 
     // fill table row
     fData.push_back({
       id.run(), id.subRun(), id.event(),            // event ID
-      i, (mcn.CCNC() == simb::kCC),                 // nu ID, is_cc
-      nu.PdgCode(), mcn.Lepton().E(),               // nu_pdg, lep_energy
-      nu.EndX(), nu.EndY(), nu.EndZ(), nu.EndT(),   // nu vertex
-      nu.EndPx(), nu.EndPy(), nu.EndPz(), nu.EndE() // nu momentum
+      nu_id, (mcn.CCNC() == simb::kCC),             // nu ID, is_cc
+      nu.PdgCode(), mcn.Lepton().E(),               // pdg_code, lepton_energy
+      nu.EndX(), nu.EndY(), nu.EndZ(), nu.EndT(),   // vertex
+      nu.EndPx(), nu.EndPy(), nu.EndPz(), nu.EndE() // momentum
     });
   } // for true neutrino
 

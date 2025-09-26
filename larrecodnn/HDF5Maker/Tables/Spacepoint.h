@@ -4,9 +4,11 @@
 
 namespace ng {
 
-class SpacepointTable : public Table
-<int, int, int, int, float, float, float, int, int, int>
-{
+class SpacepointTable : public Table<
+  unsigned int /*run*/, unsigned int /*subrun*/, unsigned int /*event*/,
+  unsigned int /*sp_id*/, float /*position_x*/, float /*position_y*/,
+  float /*position_z*/, int /*hit_id_1*/, int /*hit_id_2*/, int /*hit_id_3*/
+>{
 public:
   // spacepoint table constructor
   SpacepointTable(std::string const& hitLabel,
