@@ -9,10 +9,15 @@ class EDepTable : public Table
 {
 public:
   // edep table constructor
-  EDepTable(std::vector<Row> const& data={});
+  EDepTable(std::string const& hitLabel,
+            std::vector<Row> const& data={});
 
   // function to fill table from event
   void Fill(art::Event const& evt);
+
+private:
+  std::string fHitLabel; ///< Label for hit data product
+
 }; // class EDepTable
 
 } // namespace ng

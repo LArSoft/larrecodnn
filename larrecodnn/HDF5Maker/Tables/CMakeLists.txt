@@ -7,11 +7,15 @@ cet_set_compiler_flags(DIAGS VIGILANT DWARF_VER 4
 
 cet_make_library(SOURCE
   Table.h
+  EDep.cxx
   Event.cxx
   Neutrino.cxx
   LIBRARIES PRIVATE
   art::Framework_Principal
+  art::Framework_Services_Registry
   nusimdata::SimulationBase
+  larsim::MCCheater_BackTrackerService_service
+  lardata::DetectorInfoServices_DetectorClocksServiceStandard_service
   ${HEP_HPC_HDF5}
   HDF5::HDF5
 )
