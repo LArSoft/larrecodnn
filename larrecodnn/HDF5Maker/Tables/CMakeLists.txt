@@ -11,12 +11,14 @@ cet_make_library(SOURCE
   Event.cxx
   Hit.cxx
   Neutrino.cxx
+  Particle.cxx
   Spacepoint.cxx
   LIBRARIES PRIVATE
   art::Framework_Principal
   art::Framework_Services_Registry
   nusimdata::SimulationBase
   larsim::MCCheater_BackTrackerService_service
+  larsim::MCCheater_ParticleInventoryService_service
   lardata::DetectorInfoServices_DetectorClocksServiceStandard_service
   ${HEP_HPC_HDF5}
   HDF5::HDF5
@@ -24,25 +26,3 @@ cet_make_library(SOURCE
 
 install_headers()
 install_source()
-
-# cet_make_library(SOURCE
-#   Event.cxx
-#   Table.h
-#   LIBRARIES
-#   PUBLIC
-#   nusimdata::SimulationBase
-#   art::Framework_Principal
-#   ROOT::Hist
-#   PRIVATE
-#   ${HEP_HPC_HDF5}
-#   HDF5::HDF5
-#   lardataobj::RecoBase
-#   larsim::MCCheater_BackTrackerService_service
-#   larsim::MCCheater_ParticleInventoryService_service
-#   art::Framework_Services_Registry
-#   art::Persistency_Provenance
-#   art::Persistency_Common
-#   art::Utilities
-#   messagefacility::MF_MessageLogger
-#   canvas::canvas
-# )
