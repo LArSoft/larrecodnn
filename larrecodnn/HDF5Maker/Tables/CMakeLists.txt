@@ -9,6 +9,7 @@ cet_make_library(SOURCE
   Table.h
   EDep.cxx
   Event.cxx
+  Hit.cxx
   Neutrino.cxx
   LIBRARIES PRIVATE
   art::Framework_Principal
