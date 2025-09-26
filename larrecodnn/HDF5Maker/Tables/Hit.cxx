@@ -1,5 +1,13 @@
 #include "larrecodnn/HDF5Maker/Tables/Hit.h"
 
+#include "art/Framework/Services/Registry/ServiceHandle.h"
+#include "larcore/Geometry/Geometry.h"
+#include "larcore/Geometry/WireReadout.h"
+#include "larcorealg/Geometry/TPCGeo.h"
+#include "lardataobj/RecoBase/Hit.h"
+#include "lardata/DetectorInfoServices/DetectorClocksService.h"
+#include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
+
 namespace ng {
 
 //-----------------------------------------------------------------------------
@@ -12,8 +20,8 @@ std::vector<std::string> static const HitColumns
 
 //-----------------------------------------------------------------------------
 // hit table constructor
-HitTable::HitTable(std::vector<Row> const& data)
-  : Table("hits", HitColumns, data)
+HitTable::HitTable(std::string const& hitLabel, std::vector<Row> const& data)
+  : Table("hits", HitColumns, data), fHitLabel(hitLabel)
 {}
 
 //-----------------------------------------------------------------------------
@@ -23,12 +31,13 @@ void HitTable::Fill(art::Event const& evt)
   art::EventID const& id = evt.id();
 
   // get service handle
-  auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(evt);
+  auto const dc = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(evt);
+  auto const dp = art::ServiceHandle<detinfo::DetectorPropertiesService>()->DataFor(evt, dc);
   
   // loop over hits
-  auto hits = evt.getHandle<std::vector<recob::Hit>>(fNuLabel);
-  for (size_t i = 0; i < hits->size(); ++i) {
-    recob::Hit const& hit = hits->at(i);
+  auto hits = evt.getHandle<std::vector<recob::Hit>>(fHitLabel);
+  for (size_t hit_id = 0; hit_id < hits->size(); ++hit_id) {
+    recob::Hit const& hit = hits->at(hit_id);
 
     geo::WireID wireid = hit.WireID();
 
@@ -37,7 +46,7 @@ void HitTable::Fill(art::Event const& evt)
 
     int plane = wireid.Plane;
     int wire = wireid.Wire;
-    double time = clockData.TPCTick2Time(hit.PeakTime());
+    double time = dc.TPCTick2Time(hit.PeakTime());
 
     // global view
     int view;
@@ -55,12 +64,12 @@ void HitTable::Fill(art::Event const& evt)
 
     // global drift time coordinate
     double drift_sign = geo::to_int(tpc_geo.DriftSign());
-    double drift_distance = time * detProp.DriftVelocity();
+    double drift_distance = time * dp.DriftVelocity();
     double drift = wire_center.X() - (drift_sign * drift_distance);
 
     fData.push_back({
       id.run(), id.subRun(), id.event(),  // event ID
-      i, hit.Integral(), hit.RMS(),       // hit_id, integral, rms
+      hit_id, hit.Integral(), hit.RMS(),  // hit_id, integral, rms
       wireid.TPC, plane, wire, time,      // tpc, plane, wire, time
       view, proj, drift                   // view, proj, drift
     });
