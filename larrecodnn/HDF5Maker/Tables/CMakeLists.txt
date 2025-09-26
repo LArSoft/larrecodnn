@@ -11,6 +11,7 @@ cet_make_library(SOURCE
   Event.cxx
   Hit.cxx
   Neutrino.cxx
+  Spacepoint.cxx
   LIBRARIES PRIVATE
   art::Framework_Principal
   art::Framework_Services_Registry
