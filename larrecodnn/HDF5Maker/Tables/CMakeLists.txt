@@ -10,6 +10,7 @@ cet_make_library(SOURCE
   Event.cxx
   LDep.cxx
   Neutrino.cxx
+  OpHit.cxx
   Particle.cxx
   Spacepoint.cxx
   WireHit.cxx
