@@ -20,7 +20,9 @@
 
 #include "larrecodnn/HDF5Maker/Tables/EDep.h"
 #include "larrecodnn/HDF5Maker/Tables/Event.h"
+#include "larrecodnn/HDF5Maker/Tables/LDep.h"
 #include "larrecodnn/HDF5Maker/Tables/Neutrino.h"
+#include "larrecodnn/HDF5Maker/Tables/OpHit.h"
 #include "larrecodnn/HDF5Maker/Tables/Particle.h"
 #include "larrecodnn/HDF5Maker/Tables/Spacepoint.h"
 #include "larrecodnn/HDF5Maker/Tables/WireHit.h"
@@ -62,13 +64,16 @@ HDF5Maker::HDF5Maker(fhicl::ParameterSet const& p)
   std::string const& nu_label = p.get<std::string>("NuLabel");
   std::string const& wire_hit_label = p.get<std::string>("WireHitLabel");
   std::string const& sp_label = p.get<std::string>("SpacepointLabel");
+  std::string const& op_hit_label = p.get<std::string>("OpHitLabel");
 
   fTables.push_back(std::make_unique<EventTable>());
   fTables.push_back(std::make_unique<WireHitTable>(wire_hit_label));
   fTables.push_back(std::make_unique<SpacepointTable>(sp_label));
+  fTables.push_back(std::make_unique<OpHitTable>(op_hit_label));
   fTables.push_back(std::make_unique<NeutrinoTable>(nu_label));
   fTables.push_back(std::make_unique<EDepTable>(wire_hit_label));
   fTables.push_back(std::make_unique<ParticleTable>(wire_hit_label));
+  fTables.push_back(std::make_unique<LDepTable>(op_hit_label));
 
 } // HDF5Maker constructor
 
