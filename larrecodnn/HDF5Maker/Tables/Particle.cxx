@@ -11,7 +11,7 @@ namespace ng {
 // names of columns in particle table
 std::vector<std::string> static const ParticleColumns
 {
-  "run", "subrun", "event", "g4_id", "pdg_code", "parent_id",
+  "run", "subrun", "event", "g4_id", "nu_id", "pdg_code", "parent_id",
   "momentum_x", "momentum_y", "momentum_z", "momentum_e",
   "start_x", "start_y", "start_z", "start_t",
   "end_x", "end_y", "end_z", "end_t",
@@ -65,13 +65,18 @@ void ParticleTable::Fill(art::Event const& evt)
   // Loop over true particles and fill table
   for (unsigned int g4_id : g4_ids) {
     simb::MCParticle const& p = pi->TrackIdToParticle(g4_id);
+
+    // get neutrino ID for particle
+    art::Ptr<simb::MCTruth> const& mct = pi->ParticleToMCTruth_P(&p);
+    int nu_id = mct.isNull() ? -1 : mct.key();
+
     fData.push_back({
-      id.run(), id.subRun(), id.event(),      // event ID, g4_id
-      g4_id, p.PdgCode(), p.Mother(),         // g4_id, pdg_code, parent_id
-      p.Px(), p.Py(), p.Pz(), p.E(),          // momentum
-      p.Vx(), p.Vy(), p.Vz(), p.T(),          // start position
-      p.EndX(), p.EndY(), p.EndZ(), p.EndT(), // end position
-      p.Process(), p.EndProcess()             // start_process, end_process
+      id.run(), id.subRun(), id.event(), g4_id, // event ID, g4_id
+      nu_id, p.PdgCode(), p.Mother(),           // nu_id, pdg_code, parent_id
+      p.Px(), p.Py(), p.Pz(), p.E(),            // momentum
+      p.Vx(), p.Vy(), p.Vz(), p.T(),            // start position
+      p.EndX(), p.EndY(), p.EndZ(), p.EndT(),   // end position
+      p.Process(), p.EndProcess()               // start_process, end_process
     });
 
   } // for particle

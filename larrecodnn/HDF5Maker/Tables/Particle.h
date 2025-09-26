@@ -6,10 +6,11 @@ namespace ng {
 
 class ParticleTable : public Table<
   unsigned int /*run*/, unsigned int /*subrun*/, unsigned int /*event*/,
-  unsigned int /*g4_id*/, unsigned int /*type*/, unsigned int /*parent_id*/,
-  float /*mom_x*/, float /*mom_y*/, float /*mom_z*/, float /*mom_e*/,
-  float /*start_x*/, float /*start_y*/, float /*start_z*/, float /*start_t*/,
-  float /*end_x*/, float /*end_y*/, float /*end_z*/, float /*end_t*/,
+  unsigned int /*g4_id*/, int /*nu_id*/, unsigned int /*pdg_code*/,
+  unsigned int /*parent_id*/, float /*momentum_x*/, float /*momentum_y*/,
+  float /*momentum_z*/, float /*momentum_e*/, float /*start_x*/,
+  float /*start_y*/, float /*start_z*/, float /*start_t*/, float /*end_x*/,
+  float /*end_y*/, float /*end_z*/, float /*end_t*/,
   std::string /*start_process*/, std::string /*end_process*/
 >{
 public:
