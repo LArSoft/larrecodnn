@@ -20,9 +20,9 @@ std::vector<std::string> static const ParticleColumns
 
 //-----------------------------------------------------------------------------
 // particle table constructor
-ParticleTable::ParticleTable(std::string const& hitLabel,
+ParticleTable::ParticleTable(std::string const& wireHitLabel,
                              std::vector<Row> const& data)
-  : Table("particles", ParticleColumns, data), fHitLabel(hitLabel)
+  : Table("particles", ParticleColumns, data), fWireHitLabel(wireHitLabel)
 {}
 
 //-----------------------------------------------------------------------------
@@ -39,9 +39,8 @@ void ParticleTable::Fill(art::Event const& evt)
   // use energy deposits to get visible particles
   std::set<unsigned int> visible_ids;
   auto const clock_data = dc->DataFor(evt);
-  auto hits = evt.getHandle<std::vector<recob::Hit>>(fHitLabel);
-  for (unsigned int hit_id = 0; hit_id < hits->size(); ++hit_id) {
-    recob::Hit const& hit = hits->at(hit_id);
+  auto hits = evt.getHandle<std::vector<recob::Hit>>(fWireHitLabel);
+  for (recob::Hit const& hit : *hits) {
 
     // skip events with no TrackIDEs
     if (!bt->HitToTrackIds(clock_data, hit).size()) continue;

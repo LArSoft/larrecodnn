@@ -7,17 +7,18 @@
 namespace ng {
 
 //-----------------------------------------------------------------------------
-// names of columns in edep table
+// names of columns in energy deposit table
 std::vector<std::string> static const EDepColumns
 {
-  "run", "subrun", "event", "hit_id", "g4_id", "energy",
+  "run", "subrun", "event", "wh_id", "g4_id", "energy",
   "position_x", "position_y", "position_z"
 };
 
 //-----------------------------------------------------------------------------
 // edep table constructor
-EDepTable::EDepTable(std::string const& hitLabel, std::vector<Row> const& data)
-  : Table("edeps", EDepColumns, data), fHitLabel(hitLabel)
+EDepTable::EDepTable(std::string const& wireHitLabel,
+                     std::vector<Row> const& data)
+  : Table("edeps", EDepColumns, data), fWireHitLabel(wireHitLabel)
 {}
 
 //-----------------------------------------------------------------------------
@@ -32,9 +33,9 @@ void EDepTable::Fill(art::Event const& evt)
 
   // loop over hits
   auto const clock_data = dc->DataFor(evt);
-  auto hits = evt.getHandle<std::vector<recob::Hit>>(fHitLabel);
-  for (size_t hit_id = 0; hit_id < hits->size(); ++hit_id) {
-    recob::Hit const& hit = hits->at(hit_id);
+  auto hits = evt.getHandle<std::vector<recob::Hit>>(fWireHitLabel);
+  for (size_t wh_id = 0; wh_id < hits->size(); ++wh_id) {
+    recob::Hit const& hit = hits->at(wh_id);
 
     // skip events with no TrackIDEs
     if (!bt->HitToTrackIds(clock_data, hit).size()) continue;
@@ -54,7 +55,7 @@ void EDepTable::Fill(art::Event const& evt)
 
       fData.push_back({
         id.run(), id.subRun(), id.event(),  // event ID
-        hit_id, ide.trackID, ide.energy,    // hit_id, g4_id, energy
+        wh_id, ide.trackID, ide.energy,     // wh_id, g4_id, energy
         ide.x, ide.y, ide.z                 // position
       });
 

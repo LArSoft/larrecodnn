@@ -15,13 +15,14 @@ class ParticleTable : public Table<
 >{
 public:
   // particle table constructor
-  ParticleTable(std::string const& hitLabel, std::vector<Row> const& data={});
+  ParticleTable(std::string const& wireHitLabel,
+                std::vector<Row> const& data={});
 
   // function to fill table from event
   void Fill(art::Event const& evt);
 
 private:
-  std::string fHitLabel; ///< Label for hit data product
+  std::string fWireHitLabel; ///< Label for wire hit data product
 
 }; // class ParticleTable
 

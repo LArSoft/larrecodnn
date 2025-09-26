@@ -11,15 +11,14 @@ namespace ng {
 std::vector<std::string> static const SpacepointColumns
 {
   "run", "subrun", "event", "sp_id", "position_x", "position_y", "position_z",
-  "hit_id_1", "hit_id_2", "hit_id_3"
+  "wh_id_1", "wh_id_2", "wh_id_3"
 };
 
 //-----------------------------------------------------------------------------
 // spacepoint table constructor
-SpacepointTable::SpacepointTable(std::string const& hitLabel,
-                                 std::string const& spacepointLabel,
+SpacepointTable::SpacepointTable(std::string const& spacepointLabel,
                                  std::vector<Row> const& data)
-  : Table("spacepoints", SpacepointColumns, data), fHitLabel(hitLabel),
+  : Table("spacepoints", SpacepointColumns, data),
     fSpacepointLabel(spacepointLabel)
 {}
 
@@ -37,15 +36,15 @@ void SpacepointTable::Fill(art::Event const& evt)
     recob::SpacePoint const& sp = sps->at(sp_id);
 
     // store IDs of associated hits
-    std::array<int, 3> hit_id = {-1, -1, -1};
+    std::array<int, 3> wh_id = {-1, -1, -1};
     for (art::Ptr<recob::Hit> const& hit : fmp.at(sp_id)) {
-      hit_id[hit->View()] = hit.key();
+      wh_id[hit->View()] = hit.key();
     } // for hit
 
     fData.push_back({
       id.run(), id.subRun(), id.event(), sp_id, // event ID, sp_id
       sp.XYZ()[0], sp.XYZ()[1], sp.XYZ()[2],    // position
-      hit_id[0], hit_id[1], hit_id[2]           // hit IDs
+      wh_id[0], wh_id[1], wh_id[2]              // wire hit IDs
     });
 
   } // for spacepoint

@@ -8,10 +8,10 @@ cet_set_compiler_flags(DIAGS VIGILANT DWARF_VER 4
 cet_make_library(SOURCE
   EDep.cxx
   Event.cxx
-  Hit.cxx
   Neutrino.cxx
   Particle.cxx
   Spacepoint.cxx
+  WireHit.cxx
   LIBRARIES PRIVATE
   art::Framework_Principal
   art::Framework_Services_Registry

@@ -1,4 +1,4 @@
-#include "larrecodnn/HDF5Maker/Tables/Hit.h"
+#include "larrecodnn/HDF5Maker/Tables/WireHit.h"
 
 #include "art/Framework/Services/Registry/ServiceHandle.h"
 #include "larcore/Geometry/Geometry.h"
@@ -11,21 +11,22 @@
 namespace ng {
 
 //-----------------------------------------------------------------------------
-// names of columns in hit table
-std::vector<std::string> static const HitColumns
+// names of columns in wire hit table
+std::vector<std::string> static const WireHitColumns
 {
-  "run", "subrun", "event", "hit_id", "integral", "rms", "tpc_id", "plane",
+  "run", "subrun", "event", "wh_id", "integral", "rms", "tpc_id", "plane",
   "wire", "time", "view", "proj", "drift"
 };
 
 //-----------------------------------------------------------------------------
-// hit table constructor
-HitTable::HitTable(std::string const& hitLabel, std::vector<Row> const& data)
-  : Table("hits", HitColumns, data), fHitLabel(hitLabel)
+// wire hit table constructor
+WireHitTable::WireHitTable(std::string const& wireHitLabel,
+                           std::vector<Row> const& data)
+  : Table("wirehits", WireHitColumns, data), fWireHitLabel(wireHitLabel)
 {}
 
 //-----------------------------------------------------------------------------
-void HitTable::Fill(art::Event const& evt)
+void WireHitTable::Fill(art::Event const& evt)
 {
   // get event ID
   art::EventID const& id = evt.id();
@@ -37,9 +38,9 @@ void HitTable::Fill(art::Event const& evt)
   // loop over hits
   auto const clock_data = dc->DataFor(evt);
   auto const det_prop = dp->DataFor(evt, clock_data);
-  auto hits = evt.getHandle<std::vector<recob::Hit>>(fHitLabel);
-  for (size_t hit_id = 0; hit_id < hits->size(); ++hit_id) {
-    recob::Hit const& hit = hits->at(hit_id);
+  auto hits = evt.getHandle<std::vector<recob::Hit>>(fWireHitLabel);
+  for (size_t wh_id = 0; wh_id < hits->size(); ++wh_id) {
+    recob::Hit const& hit = hits->at(wh_id);
 
     geo::WireID wireid = hit.WireID();
 
@@ -71,13 +72,13 @@ void HitTable::Fill(art::Event const& evt)
 
     fData.push_back({
       id.run(), id.subRun(), id.event(),  // event ID
-      hit_id, hit.Integral(), hit.RMS(),  // hit_id, integral, rms
+      wh_id, hit.Integral(), hit.RMS(),   // wh_id, integral, rms
       wireid.TPC, plane, wire, time,      // tpc, plane, wire, time
       view, proj, drift                   // view, proj, drift
     });
 
   } // for hit
 
-} // function HitTable::Fill
+} // function TPCHitTable::Fill
 
 } // namespace ng

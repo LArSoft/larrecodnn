@@ -2,7 +2,7 @@ hdf5maker:
 {
   module_type:      "larrecodnn/HDF5Maker/HDF5Maker"
   NuLabel:          "generator"
-  HitLabel:         "hitfd"
+  WireHitLabel:     "hitfd"
   SpacepointLabel:  "spsolve"
   OutputName:       "hdf5maker"
 }
