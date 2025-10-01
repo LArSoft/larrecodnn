@@ -4,6 +4,7 @@ hdf5maker:
   NuLabel:          "generator"
   WireHitLabel:     "hitfd"
   OpHitLabel:       "ophitspe"
+  FlashLabel:       "opflash"
   SpacepointLabel:  "spsolve"
   OutputName:       "hdf5maker"
 }

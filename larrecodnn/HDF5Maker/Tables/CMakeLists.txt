@@ -8,6 +8,7 @@ cet_set_compiler_flags(DIAGS VIGILANT DWARF_VER 4
 cet_make_library(SOURCE
   EDep.cxx
   Event.cxx
+  Flash.cxx
   LDep.cxx
   Neutrino.cxx
   OpHit.cxx
