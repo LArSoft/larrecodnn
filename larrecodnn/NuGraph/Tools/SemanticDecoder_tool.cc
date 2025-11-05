@@ -1,8 +1,8 @@
 #include "DecoderToolBase.h"
 
 #include "art/Utilities/ToolMacros.h"
-#include "lardataobj/RecoBase/Hit.h"
 #include "canvas/Persistency/Common/Assns.h"
+#include "lardataobj/RecoBase/Hit.h"
 #include <art/Persistency/Common/PtrMaker.h>
 
 #include "lardataobj/AnalysisBase/MVAOutput.h"
@@ -63,16 +63,11 @@ private:
 SemanticDecoder::SemanticDecoder(const fhicl::ParameterSet& p)
   : DecoderToolBase(p)
   , categories{p.get<std::vector<std::string>>("categories")}
-  , hitInput{p.get<art::InputTag>("hitInput", "cluster3DCryoE")}
+  , hitInput{p.get<art::InputTag>("hitInput")}
 {}
 
 void SemanticDecoder::writeEmptyToEvent(art::Event& e, const vector<vector<size_t>>& idsmap)
 {
-  //
-  // do we need to fill the assns too?
-  auto semtdes = std::make_unique<MVADescription<5>>(hitInput.label(), instancename, categories);
-  auto outputFeatureHitAssns = std::make_unique<art::Assns<FeatureVector<5>, recob::Hit>>();
-  e.put(std::move(semtdes), instancename);
   //
   size_t size = 0;
   for (auto& v : idsmap)
@@ -80,7 +75,22 @@ void SemanticDecoder::writeEmptyToEvent(art::Event& e, const vector<vector<size_
   std::array<float, 5> arr;
   std::fill(arr.begin(), arr.end(), -1.);
   auto semtcol = std::make_unique<vector<FeatureVector<5>>>(size, FeatureVector<5>(arr));
+  auto semtdes = std::make_unique<MVADescription<5>>(hitInput.label(), instancename, categories);
+  auto outputFeatureHitAssns = std::make_unique<art::Assns<FeatureVector<5>, recob::Hit>>();
+  // fill the assns as well
+  art::ValidHandle<std::vector<recob::Hit>> hitsHandle =
+    e.getValidHandle<std::vector<recob::Hit>>(hitInput);
+  art::PtrMaker<FeatureVector<5>> fvPtrMaker{e, instancename};
+  for (size_t p = 0; p < planes.size(); p++) {
+    for (size_t id : idsmap[p]) {
+      const art::Ptr<FeatureVector<5>> fvPtr = fvPtrMaker(outputFeatureHitAssns->size());
+      const art::Ptr<recob::Hit> hitPtr(hitsHandle, id);
+      outputFeatureHitAssns->addSingle(fvPtr, hitPtr);
+    }
+  }
+  //
   e.put(std::move(semtcol), instancename);
+  e.put(std::move(semtdes), instancename);
   e.put(std::move(outputFeatureHitAssns), instancename);
   //
 }
@@ -94,7 +104,8 @@ void SemanticDecoder::writeToEvent(art::Event& e,
   e.put(std::move(semtdes), instancename);
   auto outputFeatureHitAssns = std::make_unique<art::Assns<FeatureVector<5>, recob::Hit>>();
   art::PtrMaker<FeatureVector<5>> fvPtrMaker{e, instancename};
-  art::ValidHandle<std::vector<recob::Hit>> hitsHandle = e.getValidHandle<std::vector<recob::Hit>>(hitInput);
+  art::ValidHandle<std::vector<recob::Hit>> hitsHandle =
+    e.getValidHandle<std::vector<recob::Hit>>(hitInput);
   //
   std::vector<size_t> sorted_keys;
   size_t size = 0;
@@ -135,11 +146,14 @@ void SemanticDecoder::writeToEvent(art::Event& e,
         input[j] = s[i][j].item<float>();
       softmax(input);
       FeatureVector<5> semt = FeatureVector<5>(input);
-      size_t filt_index = std::distance(sorted_keys.begin(), std::find(sorted_keys.begin(), sorted_keys.end(), idx));
+      size_t filt_index =
+        std::distance(sorted_keys.begin(), std::find(sorted_keys.begin(), sorted_keys.end(), idx));
       (*semtcol)[filt_index] = semt;
       const art::Ptr<FeatureVector<5>> fvPtr = fvPtrMaker(filt_index);
       const art::Ptr<recob::Hit> hitPtr(hitsHandle, idx);
-      if (debug) std::cout << "Associating SemanticVector #" << fvPtr.key() << " with hit #" << hitPtr.key() << '\n';
+      if (debug)
+        std::cout << "Associating SemanticVector #" << fvPtr.key() << " with hit #" << hitPtr.key()
+                  << '\n';
       outputFeatureHitAssns->addSingle(fvPtr, hitPtr);
     }
   }
