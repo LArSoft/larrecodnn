@@ -114,6 +114,7 @@ void SemanticDecoder::writeToEvent(art::Event& e,
     for (auto k : v)
       sorted_keys.push_back(k);
   }
+  // preserve the order for backward compatibility
   std::sort(sorted_keys.begin(), sorted_keys.end());
   std::array<float, 5> arr;
   std::fill(arr.begin(), arr.end(), -1.);

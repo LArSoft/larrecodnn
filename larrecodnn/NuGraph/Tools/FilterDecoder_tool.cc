@@ -101,6 +101,7 @@ void FilterDecoder::writeToEvent(art::Event& e,
     for (auto k : v)
       sorted_keys.push_back(k);
   }
+  // preserve the order for backward compatibility
   std::sort(sorted_keys.begin(), sorted_keys.end());
   auto filtcol =
     std::make_unique<vector<FeatureVector<1>>>(size, FeatureVector<1>(std::array<float, 1>({-1.})));
