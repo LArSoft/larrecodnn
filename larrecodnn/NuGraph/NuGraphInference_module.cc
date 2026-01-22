@@ -212,33 +212,40 @@ void NuGraphInference::produce(art::Event& e)
     }
     if (debug) std::cout << "Plane " << p << " has N hits=" << coords.size() / 2 << std::endl;
     if (coords.size() / 2 < 3) { continue; }
-    delaunator::Delaunator d(coords);
-    if (debug) std::cout << "Found N triangles=" << d.triangles.size() / 3 << std::endl;
-    for (std::size_t i = 0; i < d.triangles.size(); i += 3) {
-      //create edges in both directions
-      Edge e;
-      e.n1 = d.triangles[i];
-      e.n2 = d.triangles[i + 1];
-      edge2d[p].push_back(e);
-      e.n1 = d.triangles[i + 1];
-      e.n2 = d.triangles[i];
-      edge2d[p].push_back(e);
-      //
-      e.n1 = d.triangles[i];
-      e.n2 = d.triangles[i + 2];
-      edge2d[p].push_back(e);
-      e.n1 = d.triangles[i + 2];
-      e.n2 = d.triangles[i];
-      edge2d[p].push_back(e);
-      //
-      e.n1 = d.triangles[i + 1];
-      e.n2 = d.triangles[i + 2];
-      edge2d[p].push_back(e);
-      e.n1 = d.triangles[i + 2];
-      e.n2 = d.triangles[i + 1];
-      edge2d[p].push_back(e);
-      //
+    try {
+      delaunator::Delaunator d(coords);
+      if (debug) std::cout << "Found N triangles=" << d.triangles.size() / 3 << std::endl;
+      for (std::size_t i = 0; i < d.triangles.size(); i += 3) {
+        //create edges in both directions
+        Edge e;
+        e.n1 = d.triangles[i];
+        e.n2 = d.triangles[i + 1];
+        edge2d[p].push_back(e);
+        e.n1 = d.triangles[i + 1];
+        e.n2 = d.triangles[i];
+        edge2d[p].push_back(e);
+        //
+        e.n1 = d.triangles[i];
+        e.n2 = d.triangles[i + 2];
+        edge2d[p].push_back(e);
+        e.n1 = d.triangles[i + 2];
+        e.n2 = d.triangles[i];
+        edge2d[p].push_back(e);
+        //
+        e.n1 = d.triangles[i + 1];
+        e.n2 = d.triangles[i + 2];
+        edge2d[p].push_back(e);
+        e.n1 = d.triangles[i + 2];
+        e.n2 = d.triangles[i + 1];
+        edge2d[p].push_back(e);
+        //
+      }
     }
+    catch (const std::exception& e) {
+      mf::LogWarning("NuGraphInference") << "Failed Delauney triangulation: " << e.what();
+      continue;
+    }
+
     //sort and cleanup duplicate edges
     std::sort(edge2d[p].begin(), edge2d[p].end(), [](const auto& i, const auto& j) {
       return (i.n1 != j.n1 ? i.n1 < j.n1 : i.n2 < j.n2);
