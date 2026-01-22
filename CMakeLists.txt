@@ -9,7 +9,7 @@
 cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 
 find_package(cetmodules REQUIRED)
-project(larrecodnn VERSION 10.01.07.01 LANGUAGES CXX)
+project(larrecodnn VERSION 10.02.06 LANGUAGES CXX)
 
 include(CetCMakeEnv)
 cet_cmake_env()
@@ -55,8 +55,10 @@ find_package(TensorFlow 2.6.0 QUIET EXPORT)
 find_package(Torch QUIET EXPORT)
 find_package(TorchScatter QUIET EXPORT)
 find_package(Threads REQUIRED EXPORT)
-if (TritonClient_FOUND)
+if (TritonClient_FOUND OR Torch_FOUND)
   find_package(Protobuf REQUIRED EXPORT)
+endif()
+if (TritonClient_FOUND)
   find_package(gRPC REQUIRED EXPORT)
 endif()
 

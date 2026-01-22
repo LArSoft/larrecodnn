@@ -19,8 +19,8 @@ cet_build_plugin(SavePiMu art::tool
 )
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND
-    CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "13.2")
-  # GCC 13.2 (and above) aggressively/spuriously warns about array-bounds issues.
+    CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "12.5")
+  # GCC 12.5 (and above) aggressively/spuriously warns about array-bounds issues.
   target_compile_options(larrecodnn_ImageMaker_SavePiMu_tool
                          PRIVATE "-Wno-array-bounds;-Wno-stringop-overread")
 endif()
