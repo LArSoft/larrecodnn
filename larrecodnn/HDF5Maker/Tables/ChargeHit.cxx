@@ -40,8 +40,8 @@ void ChargeHitTable::Fill(art::Event const& evt)
   auto const clock_data = dc->DataFor(evt);
   auto const det_prop = dp->DataFor(evt, clock_data);
   auto hits = evt.getHandle<std::vector<recob::Hit>>(fChargeHitLabel);
-  for (size_t wh_id = 0; wh_id < hits->size(); ++wh_id) {
-    recob::Hit const& hit = hits->at(wh_id);
+  for (size_t ch_id = 0; ch_id < hits->size(); ++ch_id) {
+    recob::Hit const& hit = hits->at(ch_id);
 
     geo::WireID wireid = hit.WireID();
 
