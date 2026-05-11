@@ -13,30 +13,3 @@ install_headers()
 install_fhicl()
 install_source()
 
-# simple_plugin(HDF5Maker "module"
-#     ${ART_FRAMEWORK_PRINCIPAL}
-#     ${ART_FRAMEWORK_SERVICES_REGISTRY}
-#     ${ART_FRAMEWORK_SERVICES_BASIC}
-#     ${ART_FRAMEWORK_SERVICES_OPTIONAL}
-#     ${ART_PERSISTENCY_PROVENANCE}
-#     ${ART_ROOT_IO_TFILE_SUPPORT}
-#     ${ROOT_CORE}
-#     ${ART_ROOT_IO_TFILESERVICE_SERVICE}
-#     ${ART_PERSISTENCY_COMMON}
-#     canvas
-#     ${ART_UTILITIES}
-#     ${MF_MESSAGELOGGER}
-#     ${FHICLCPP}
-#     cetlib
-#     cetlib_except
-#     ${ROOT_BASIC_LIB_LIST}
-#     nusimdata_SimulationBase
-#     larsim_MCCheater_BackTrackerService_service           
-#     larsim_MCCheater_ParticleInventoryService_service
-#     lardata_DetectorInfoServices_DetectorPropertiesServiceStandard_service
-#     hep_hpc_hdf5
-#     hep_hpc_Utilities
-#     ${HDF5_LIBRARIES}
-# )
-
-
