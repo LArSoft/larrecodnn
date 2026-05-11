@@ -22,7 +22,7 @@ public:
   void Fill(art::Event const& evt);
 
 private:
-  std::string fWireHitLabel; ///< Label for wire hit data product
+  std::string fChargeHitLabel; ///< Label for charge hit data product
 
 }; // class ParticleTable
 
