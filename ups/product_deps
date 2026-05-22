@@ -255,7 +255,7 @@ triton		v2_25_0d	-	optional
 libtorch        v2_1_1b         -	optional
 torch_scatter   v2_1_2a         -	optional
 delaunator      v1_0_0          -
-hep_hpc		v0_14_02        -
+hep_hpc		v0_15_00        -
 cetmodules	v3_27_04	-	only_for_build
 end_product_list
 ####################################
