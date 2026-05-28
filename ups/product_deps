@@ -253,7 +253,7 @@ larfinder       v09_00_05       -
 tensorflow	v2_15_0		-	optional
 triton		v2_25_0d	-	optional
 libtorch        v2_1_1b         -	optional
-torch_scatter   v2_1_2a         -	optional
+torch_scatter   v2_1_2b         -	optional
 delaunator      v1_0_0          -
 hep_hpc		v0_15_00        -
 cetmodules	v3_27_04	-	only_for_build
@@ -316,6 +316,8 @@ c14:debug	c14:debug	c14:p3915	c14     -nq-       c14       c14              -nq-
 c14:prof        c14:prof	c14:p3915	c14     -nq-       c14       c14              -nq-     c14:prof
 e26:debug	e26:debug	e26:p3915	e26     -nq-       e26       e26              -nq-     e26:debug
 e26:prof	e26:prof	e26:p3915	e26     -nq-       e26       e26              -nq-     e26:prof
+e28:debug	e28:debug	e28:p3915	e28     -nq-       e28       e28              -nq-     e28:debug
+e28:prof	e28:prof	e28:p3915	e28     -nq-       e28       e28              -nq-     e28:prof
 end_qualifier_list
 ####################################
 
