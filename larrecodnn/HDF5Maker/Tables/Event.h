@@ -4,15 +4,15 @@
 
 namespace ng {
 
-class EventTable : public Table<
-  unsigned int /*run*/, unsigned int /*subrun*/, unsigned int /*event*/
->{
-public:
-  // event table constructor
-  EventTable(std::vector<Row> const& data={});
+  class EventTable
+    : public Table<unsigned int /*run*/, unsigned int /*subrun*/, unsigned int /*event*/
+                   > {
+  public:
+    // event table constructor
+    EventTable(std::vector<Row> const& data = {});
 
-  // function to fill table from event
-  void Fill(art::Event const& evt);
-}; // class EventTable
+    // function to fill table from event
+    void Fill(art::Event const& evt);
+  }; // class EventTable
 
 } // namespace ng
