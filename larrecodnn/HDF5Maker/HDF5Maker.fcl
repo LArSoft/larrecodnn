@@ -1,3 +1,4 @@
+BEGIN_PROLOG
 hdf5maker:
 {
   module_type:      "larrecodnn/HDF5Maker/HDF5Maker"
@@ -8,3 +9,4 @@ hdf5maker:
   SpacepointLabel:  "spsolve"
   OutputName:       "hdf5maker"
 }
+END_PROLOG
