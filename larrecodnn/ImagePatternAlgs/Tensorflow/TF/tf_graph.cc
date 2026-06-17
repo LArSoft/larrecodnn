@@ -49,11 +49,8 @@ tf::Graph::Graph(const char* graph_file_name,
   if (fUseBundle) {
 
     fBundle = new tensorflow::SavedModelBundle();
-    status = tensorflow::LoadSavedModel(tensorflow::SessionOptions(),
-                                        tensorflow::RunOptions(),
-                                        graph_file_name,
-                                        {},
-                                        fBundle);
+    status = tensorflow::LoadSavedModel(
+      tensorflow::SessionOptions(), tensorflow::RunOptions(), graph_file_name, {}, fBundle);
     std::cout << "tf_graph loaded SavedModelBundle with status: " << status.ToString() << std::endl;
     if (!status.ok()) return;
 
