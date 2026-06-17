@@ -32,14 +32,12 @@ cet_build_plugin(NuGraphInferenceSonicTriton art::EDProducer
     LIBRARIES PRIVATE
     lardataobj::RecoBase
     larrecodnn_ImagePatternAlgs_NuSonic_Triton
-    TorchScatter::TorchScatter
     IMPL_TARGET_VAR NuGraphInferenceSonicTriton_module
 )
 
 cet_build_plugin(NuGraphInferenceTriton art::EDProducer
     LIBRARIES PRIVATE
     lardataobj::RecoBase
-    TorchScatter::TorchScatter
     TritonClient::grpcclient
     gRPC::grpc # Should be a transitive (INTERFACE) dependency of TritonClient::grpcclient
     IMPL_TARGET_VAR NuGraphInferenceTriton_module
