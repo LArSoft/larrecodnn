@@ -3,7 +3,7 @@
 #include "art/Framework/Services/Registry/ServiceHandle.h"
 #include "larsim/MCCheater/PhotonBackTrackerService.h"
 
-namespace ng {
+namespace nugraph {
 
   //-----------------------------------------------------------------------------
   // names of columns in light deposit table
@@ -73,4 +73,4 @@ namespace ng {
 
   } // function LDepTable::Fill
 
-} // namespace ng
+} // namespace nugraph

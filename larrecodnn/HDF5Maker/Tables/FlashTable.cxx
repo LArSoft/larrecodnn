@@ -2,7 +2,7 @@
 
 #include "lardataobj/RecoBase/OpFlash.h"
 
-namespace ng {
+namespace nugraph {
 
   //-----------------------------------------------------------------------------
   // names of columns in flash table
@@ -53,4 +53,4 @@ namespace ng {
 
   } // function FlashTable::Fill
 
-} // namespace ng
+} // namespace nugraph

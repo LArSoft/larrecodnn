@@ -2,7 +2,7 @@
 
 #include "larrecodnn/HDF5Maker/Tables/Table.h"
 
-namespace ng {
+namespace nugraph {
 
   class EventTable
     : public Table<unsigned int /*run*/, unsigned int /*subrun*/, unsigned int /*event*/
@@ -15,4 +15,4 @@ namespace ng {
     void Fill(art::Event const& evt);
   }; // class EventTable
 
-} // namespace ng
+} // namespace nugraph

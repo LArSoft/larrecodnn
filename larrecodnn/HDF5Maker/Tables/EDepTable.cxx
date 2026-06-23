@@ -4,7 +4,7 @@
 #include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "larsim/MCCheater/BackTrackerService.h"
 
-namespace ng {
+namespace nugraph {
 
   //-----------------------------------------------------------------------------
   // names of columns in energy deposit table
@@ -74,4 +74,4 @@ namespace ng {
 
   } // function EDepTable::Fill
 
-} // namespace ng
+} // namespace nugraph

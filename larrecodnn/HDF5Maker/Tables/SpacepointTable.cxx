@@ -4,7 +4,7 @@
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/SpacePoint.h"
 
-namespace ng {
+namespace nugraph {
 
   //-----------------------------------------------------------------------------
   // names of columns in spacepoint table
@@ -61,4 +61,4 @@ namespace ng {
 
   } // function SpacepointTable::Fill
 
-} // namespace ng
+} // namespace nugraph

@@ -2,7 +2,7 @@
 
 #include "larrecodnn/HDF5Maker/Tables/Table.h"
 
-namespace ng {
+namespace nugraph {
 
   class EDepTable : public Table<unsigned int /*run*/,
                                  unsigned int /*subrun*/,
@@ -26,4 +26,4 @@ namespace ng {
 
   }; // class EDepTable
 
-} // namespace ng
+} // namespace nugraph

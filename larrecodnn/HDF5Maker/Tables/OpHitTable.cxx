@@ -4,7 +4,7 @@
 #include "lardataobj/RecoBase/OpFlash.h"
 #include "lardataobj/RecoBase/OpHit.h"
 
-namespace ng {
+namespace nugraph {
 
   //-----------------------------------------------------------------------------
   // names of columns in optical hit table
@@ -67,4 +67,4 @@ namespace ng {
 
   } // function OpHitTable::Fill
 
-} // namespace ng
+} // namespace nugraph

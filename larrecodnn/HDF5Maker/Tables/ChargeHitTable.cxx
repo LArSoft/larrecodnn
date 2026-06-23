@@ -8,7 +8,7 @@
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
 #include "lardataobj/RecoBase/Hit.h"
 
-namespace ng {
+namespace nugraph {
 
   //-----------------------------------------------------------------------------
   // names of columns in charge hit table
@@ -99,4 +99,4 @@ namespace ng {
 
   } // function ChargeHitTable::Fill
 
-} // namespace ng
+} // namespace nugraph

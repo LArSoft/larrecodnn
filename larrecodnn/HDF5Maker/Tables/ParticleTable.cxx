@@ -5,7 +5,7 @@
 #include "larsim/MCCheater/BackTrackerService.h"
 #include "larsim/MCCheater/ParticleInventoryService.h"
 
-namespace ng {
+namespace nugraph {
 
   //-----------------------------------------------------------------------------
   // names of columns in particle table
@@ -78,4 +78,4 @@ namespace ng {
 
   } // function ParticleTable::Fill
 
-} // namespace ng
+} // namespace nugraph

@@ -22,7 +22,7 @@
 
 #include "hep_hpc/hdf5/File.hpp"
 
-namespace ng {
+namespace nugraph {
 
   class HDF5Maker : public art::EDAnalyzer {
   public:
@@ -121,4 +121,4 @@ namespace ng {
 
   DEFINE_ART_MODULE(HDF5Maker)
 
-} // namespace ng
+} // namespace nugraph

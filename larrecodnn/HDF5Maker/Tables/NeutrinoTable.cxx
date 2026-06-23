@@ -2,7 +2,7 @@
 
 #include "nusimdata/SimulationBase/MCTruth.h"
 
-namespace ng {
+namespace nugraph {
 
   //-----------------------------------------------------------------------------
   // names of columns in neutrino table
@@ -63,4 +63,4 @@ namespace ng {
 
   } // function NeutrinoTable::Fill
 
-} // namespace ng
+} // namespace nugraph

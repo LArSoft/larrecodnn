@@ -2,7 +2,7 @@
 
 #include "larrecodnn/HDF5Maker/Tables/Table.h"
 
-namespace ng {
+namespace nugraph {
 
   class FlashTable : public Table<unsigned int /*run*/,
                                   unsigned int /*subrun*/,
@@ -28,4 +28,4 @@ namespace ng {
 
   }; // class FlashTable
 
-} // namespace ng
+} // namespace nugraph

@@ -1,6 +1,6 @@
 #include "larrecodnn/HDF5Maker/Tables/EventTable.h"
 
-namespace ng {
+namespace nugraph {
 
   //-----------------------------------------------------------------------------
   // names of columns in event table
@@ -21,4 +21,4 @@ namespace ng {
 
   } // function EventTable::Fill
 
-} // namespace ng
+} // namespace nugraph

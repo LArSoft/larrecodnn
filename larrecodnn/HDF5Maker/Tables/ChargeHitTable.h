@@ -2,7 +2,7 @@
 
 #include "larrecodnn/HDF5Maker/Tables/Table.h"
 
-namespace ng {
+namespace nugraph {
 
   class ChargeHitTable : public Table<unsigned int /*run*/,
                                       unsigned int /*subrun*/,
@@ -30,4 +30,4 @@ namespace ng {
 
   }; // class ChargeHitTable
 
-} // namespace ng
+} // namespace nugraph

@@ -5,7 +5,7 @@
 #include "hep_hpc/hdf5/File.hpp"
 #include "hep_hpc/hdf5/Ntuple.hpp"
 
-namespace ng {
+namespace nugraph {
 
   // virtual base class
   class ITable {
@@ -85,4 +85,4 @@ namespace ng {
 
   }; // template table class
 
-} // namespace ng
+} // namespace nugraph
