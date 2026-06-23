@@ -1,4 +1,4 @@
-#include "larrecodnn/HDF5Maker/Tables/EDep.h"
+#include "larrecodnn/HDF5Maker/Tables/EDepTable.h"
 
 #include "art/Framework/Services/Registry/ServiceHandle.h"
 #include "lardata/DetectorInfoServices/DetectorClocksService.h"

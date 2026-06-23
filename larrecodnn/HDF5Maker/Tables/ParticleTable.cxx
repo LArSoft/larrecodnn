@@ -1,4 +1,4 @@
-#include "larrecodnn/HDF5Maker/Tables/Particle.h"
+#include "larrecodnn/HDF5Maker/Tables/ParticleTable.h"
 
 #include "art/Framework/Services/Registry/ServiceHandle.h"
 #include "lardata/DetectorInfoServices/DetectorClocksService.h"

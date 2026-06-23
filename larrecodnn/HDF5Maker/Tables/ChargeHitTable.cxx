@@ -1,4 +1,4 @@
-#include "larrecodnn/HDF5Maker/Tables/ChargeHit.h"
+#include "larrecodnn/HDF5Maker/Tables/ChargeHitTable.h"
 
 #include "art/Framework/Services/Registry/ServiceHandle.h"
 #include "larcore/Geometry/Geometry.h"

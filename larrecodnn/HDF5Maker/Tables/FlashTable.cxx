@@ -1,4 +1,4 @@
-#include "larrecodnn/HDF5Maker/Tables/Flash.h"
+#include "larrecodnn/HDF5Maker/Tables/FlashTable.h"
 
 #include "lardataobj/RecoBase/OpFlash.h"
 

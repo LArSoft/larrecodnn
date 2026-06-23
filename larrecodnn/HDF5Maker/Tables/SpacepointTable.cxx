@@ -1,4 +1,4 @@
-#include "larrecodnn/HDF5Maker/Tables/Spacepoint.h"
+#include "larrecodnn/HDF5Maker/Tables/SpacepointTable.h"
 
 #include "canvas/Persistency/Common/FindManyP.h"
 #include "lardataobj/RecoBase/Hit.h"

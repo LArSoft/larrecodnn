@@ -1,4 +1,4 @@
-#include "larrecodnn/HDF5Maker/Tables/Neutrino.h"
+#include "larrecodnn/HDF5Maker/Tables/NeutrinoTable.h"
 
 #include "nusimdata/SimulationBase/MCTruth.h"
 

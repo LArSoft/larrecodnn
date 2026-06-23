@@ -1,4 +1,4 @@
-#include "larrecodnn/HDF5Maker/Tables/OpHit.h"
+#include "larrecodnn/HDF5Maker/Tables/OpHitTable.h"
 
 #include "canvas/Persistency/Common/FindManyP.h"
 #include "lardataobj/RecoBase/OpFlash.h"

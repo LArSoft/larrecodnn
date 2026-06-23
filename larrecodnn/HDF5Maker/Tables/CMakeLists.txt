@@ -6,15 +6,15 @@ cet_set_compiler_flags(DIAGS VIGILANT DWARF_VER 4
   EXTRA_FLAGS -pedantic)
 
 cet_make_library(SOURCE
-  ChargeHit.cxx
-  EDep.cxx
-  Event.cxx
-  Flash.cxx
-  LDep.cxx
-  Neutrino.cxx
-  OpHit.cxx
-  Particle.cxx
-  Spacepoint.cxx
+  ChargeHitTable.cxx
+  EDepTable.cxx
+  EventTable.cxx
+  FlashTable.cxx
+  LDepTable.cxx
+  NeutrinoTable.cxx
+  OpHitTable.cxx
+  ParticleTable.cxx
+  SpacepointTable.cxx
   LIBRARIES PRIVATE
   art::Framework_Principal
   art::Framework_Services_Registry

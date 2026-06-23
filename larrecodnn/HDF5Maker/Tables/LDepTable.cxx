@@ -1,4 +1,4 @@
-#include "larrecodnn/HDF5Maker/Tables/LDep.h"
+#include "larrecodnn/HDF5Maker/Tables/LDepTable.h"
 
 #include "art/Framework/Services/Registry/ServiceHandle.h"
 #include "larsim/MCCheater/PhotonBackTrackerService.h"

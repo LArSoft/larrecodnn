@@ -1,4 +1,4 @@
-#include "larrecodnn/HDF5Maker/Tables/Event.h"
+#include "larrecodnn/HDF5Maker/Tables/EventTable.h"
 
 namespace ng {
 
