@@ -14,7 +14,7 @@ namespace nugraph {
     virtual ~ITable(){};
     virtual void Fill(art::Event const&) = 0;
     virtual void InitNtuple(hep_hpc::hdf5::File&) = 0;
-    virtual void WriteNtuple(bool = true) = 0;
+    virtual void WriteNtuple(bool clear = true) = 0;
     virtual void DestroyNtuple() = 0;
   }; // class ITable
 
