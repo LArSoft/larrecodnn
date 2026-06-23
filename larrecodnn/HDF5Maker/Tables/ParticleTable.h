@@ -1,4 +1,5 @@
-#pragma once
+#ifndef LARRECODNN_HDF5MAKER_TABLES_PARTICLETABLE_H
+#define LARRECODNN_HDF5MAKER_TABLES_PARTICLETABLE_H
 
 #include "larrecodnn/HDF5Maker/Tables/Table.h"
 
@@ -39,3 +40,5 @@ namespace nugraph {
   }; // class ParticleTable
 
 } // namespace nugraph
+
+#endif

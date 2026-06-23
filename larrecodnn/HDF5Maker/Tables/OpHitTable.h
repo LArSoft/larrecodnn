@@ -1,4 +1,5 @@
-#pragma once
+#ifndef LARRECODNN_HDF5MAKER_TABLES_OPHITTABLE_H
+#define LARRECODNN_HDF5MAKER_TABLES_OPHITTABLE_H
 
 #include "larrecodnn/HDF5Maker/Tables/Table.h"
 
@@ -31,3 +32,5 @@ namespace nugraph {
   }; // class OpHitTable
 
 } // namespace nugraph
+
+#endif

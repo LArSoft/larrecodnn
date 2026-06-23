@@ -1,4 +1,5 @@
-#pragma once
+#ifndef LARRECODNN_HDF5MAKER_TABLES_LDEPTABLE_H
+#define LARRECODNN_HDF5MAKER_TABLES_LDEPTABLE_H
 
 #include "larrecodnn/HDF5Maker/Tables/Table.h"
 
@@ -27,3 +28,5 @@ namespace nugraph {
   }; // class LDepTable
 
 } // namespace nugraph
+
+#endif

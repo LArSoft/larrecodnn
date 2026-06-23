@@ -1,4 +1,5 @@
-#pragma once
+#ifndef LARRECODNN_HDF5MAKER_TABLES_TABLE_H
+#define LARRECODNN_HDF5MAKER_TABLES_TABLE_H
 
 #include "art/Framework/Principal/Event.h"
 
@@ -86,3 +87,5 @@ namespace nugraph {
   }; // template table class
 
 } // namespace nugraph
+
+#endif
