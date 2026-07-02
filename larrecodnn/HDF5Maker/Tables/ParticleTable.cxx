@@ -42,7 +42,7 @@ namespace nugraph {
       if (!bt->HitToTrackIds(clock_data, hit).size()) continue;
 
       // add visible particle IDs
-      for (const sim::IDE& ide : bt->HitToAvgSimIDEs(clock_data, hit)) {
+      for (sim::IDE const& ide : bt->HitToAvgSimIDEs(clock_data, hit)) {
         visible_ids.insert(abs(ide.trackID));
       } // for energy deposit
     }   // for hit

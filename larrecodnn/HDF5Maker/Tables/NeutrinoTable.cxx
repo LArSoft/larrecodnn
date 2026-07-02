@@ -37,8 +37,8 @@ namespace nugraph {
     // get neutrino truth information
     auto mcts = evt.getHandle<std::vector<simb::MCTruth>>(fNuLabel);
     for (unsigned int nu_id = 0; nu_id < mcts->size(); ++nu_id) {
-      const simb::MCNeutrino& mcn = mcts->at(nu_id).GetNeutrino();
-      const simb::MCParticle& nu = mcn.Nu();
+      simb::MCNeutrino const& mcn = mcts->at(nu_id).GetNeutrino();
+      simb::MCParticle const& nu = mcn.Nu();
 
       // fill table row
       fData.push_back({

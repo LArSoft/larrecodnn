@@ -51,9 +51,9 @@ namespace nugraph {
 
       geo::WireID wireid = hit.WireID();
 
-      const geo::TPCGeo& tpc_geo =
+      geo::TPCGeo const& tpc_geo =
         art::ServiceHandle<geo::Geometry>()->TPC(geo::TPCID{0, wireid.TPC});
-      const geo::WireGeo& wire_geo = art::ServiceHandle<geo::WireReadout>()->Get().Wire(wireid);
+      geo::WireGeo const& wire_geo = art::ServiceHandle<geo::WireReadout>()->Get().Wire(wireid);
 
       int plane = wireid.Plane;
       int wire = wireid.Wire;

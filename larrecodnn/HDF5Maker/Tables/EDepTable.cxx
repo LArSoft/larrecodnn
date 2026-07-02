@@ -44,7 +44,7 @@ namespace nugraph {
       if (!bt->HitToTrackIds(clock_data, hit).size()) continue;
 
       // loop over averaged sim::IDEs
-      for (const sim::IDE& ide : bt->HitToAvgSimIDEs(clock_data, hit)) {
+      for (sim::IDE const& ide : bt->HitToAvgSimIDEs(clock_data, hit)) {
 
         // catch negative track IDs
         if (ide.trackID < 0) {

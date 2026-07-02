@@ -57,7 +57,7 @@ namespace nugraph {
     void WriteNtuple(bool clear) override
     {
       constexpr auto N = std::tuple_size_v<Row>;
-      for (const Row& row : fData) {
+      for (Row const& row : fData) {
         WriteRow(row, std::make_index_sequence<N>{});
       }                       // for table row
       if (clear) { Clear(); } // if clearing data
