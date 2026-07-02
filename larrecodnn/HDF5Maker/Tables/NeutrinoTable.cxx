@@ -39,7 +39,6 @@ namespace nugraph {
     for (unsigned int nu_id = 0; nu_id < mcts->size(); ++nu_id) {
       const simb::MCNeutrino& mcn = mcts->at(nu_id).GetNeutrino();
       const simb::MCParticle& nu = mcn.Nu();
-      const TVector3& dir = nu.Momentum().Vect().Unit();
 
       // fill table row
       fData.push_back({
