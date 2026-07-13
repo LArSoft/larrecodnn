@@ -318,8 +318,7 @@ namespace wframerec_tool {
         total += vw.values[s].size();
       }
 
-      out.emplace_back();
-      auto& v = out.back();
+      auto& v = out.emplace_back();
       v.reserve(total);
 
       for (const auto& vw : views) {
