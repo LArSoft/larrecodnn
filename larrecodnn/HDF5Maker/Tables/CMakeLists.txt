@@ -27,5 +27,12 @@ cet_make_library(SOURCE
   HDF5::HDF5
 )
 
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND
+    CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "12.5")
+  # GCC 12.5 (and above) aggressively/spuriously warns about array-bounds issues.
+  target_compile_options(larrecodnn_HDF5Maker_Tables
+                         PRIVATE "-Wno-array-bounds;-Wno-stringop-overread;-Wno-stringop-overflow;-Wno-sign-compare")
+endif()
+
 install_headers()
 install_source()
