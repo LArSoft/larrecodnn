@@ -22,10 +22,9 @@ cet_build_plugin(WireframeRecogTriton art::tool
     TritonClient::grpcclient
     gRPC::grpc   #larrecodnn_ImagePatternAlgs_NuSonic_Triton
     messagefacility::MF_MessageLogger
-    fhiclcpp::types
     fhiclcpp::fhiclcpp
     cetlib_except::cetlib_except
-    canvas::canvas
+    
 )
 
 install_source()

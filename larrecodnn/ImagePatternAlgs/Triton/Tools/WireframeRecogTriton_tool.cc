@@ -87,25 +87,21 @@ namespace wframerec_tool {
   }
 
   WireframeRecogTriton::WireframeRecogTriton(const fhicl::ParameterSet& pset)
+    : fTritonModelName{pset.get<std::string>("TritonModelName")}
+    , fTritonURL{pset.get<std::string>("TritonURL", "localhost:8001")}
+    , fTritonVerbose{pset.get<bool>("TritonVerbose", false)}
+    , fTritonModelVersion{pset.get<std::string>("TritonModelVersion", "")}
+    , fTritonTimeout{pset.get<unsigned>("TritonTimeout", 10000)}
+    , fInputName{pset.get<std::string>("InputName", "")}
+    , fOutputNames{pset.get<std::vector<std::string>>("OutputNames")}
+    , fAuthTokenEnvVar{pset.get<std::string>("AuthTokenEnvVar", "DUNE_TRITON_TOKEN")}
+    , fRequireAuthToken{pset.get<bool>("RequireAuthToken", false)}
+    , fTritonSSL{pset.get<bool>("TritonSSL", false)}
+    , fTritonSSLRootCertificates{pset.get<std::string>("TritonSSLRootCertificates", "")}
+    , fTritonSSLPrivateKey{pset.get<std::string>("TritonSSLPrivateKey", "")}
+    , fTritonSSLCertificateChain{pset.get<std::string>("TritonSSLCertificateChain", "")}
+    , fLogTiming{pset.get<bool>("LogTiming", false)}
   {
-    fOutputNames = pset.get<std::vector<std::string>>("OutputNames");
-    fInputName = pset.get<std::string>("InputName", "");
-    fTritonModelName = pset.get<std::string>("TritonModelName");
-    fTritonURL = pset.get<std::string>("TritonURL", "localhost:8001");
-    fTritonVerbose = pset.get<bool>("TritonVerbose", false);
-    fTritonModelVersion = pset.get<std::string>("TritonModelVersion", "");
-    fTritonTimeout = pset.get<unsigned>("TritonTimeout", 10000);
-
-    fAuthTokenEnvVar = pset.get<std::string>("AuthTokenEnvVar", "DUNE_TRITON_TOKEN");
-    fRequireAuthToken = pset.get<bool>("RequireAuthToken", false);
-
-    fTritonSSL = pset.get<bool>("TritonSSL", false);
-    fTritonSSLRootCertificates = pset.get<std::string>("TritonSSLRootCertificates", "");
-    fTritonSSLPrivateKey = pset.get<std::string>("TritonSSLPrivateKey", "");
-    fTritonSSLCertificateChain = pset.get<std::string>("TritonSSLCertificateChain", "");
-
-    fLogTiming = pset.get<bool>("LogTiming", false);
-
     if (fTritonModelName.empty()) {
       throw cet::exception("WireframeRecogTriton") << "TritonModelName must be provided.";
     }
