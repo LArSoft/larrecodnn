@@ -17,5 +17,14 @@ cet_build_plugin(PointIdAlgTriton lar::PointIdAlgorithm
   fhiclcpp::fhiclcpp
   cetlib_except::cetlib_except
 )
+cet_build_plugin(WireframeRecogTriton art::tool
+  LIBRARIES PRIVATE
+    TritonClient::grpcclient
+    gRPC::grpc   #larrecodnn_ImagePatternAlgs_NuSonic_Triton
+    messagefacility::MF_MessageLogger
+    fhiclcpp::fhiclcpp
+    cetlib_except::cetlib_except
+    
+)
 
 install_source()
